@@ -1,0 +1,60 @@
+:root {
+  /* Paleta — "muelle al amanecer": navy profundo de casco de barco,
+     azul de red de pesca para acentos de navegación, naranja de boya
+     para acciones primarias. */
+  --color-navy: #0a1a3f;
+  --color-navy-raised: #122a5c;
+  --color-navy-border: #1f3872;
+
+  --color-bg: #eef2f9;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f6f8fc;
+  --color-border: #dde3ee;
+  --color-border-strong: #c7d0e3;
+
+  --color-text: #101a33;
+  --color-text-muted: #57628a;
+  --color-text-faint: #8892ac;
+  --color-text-on-navy: #eef2f9;
+  --color-text-on-navy-muted: #9fb0e0;
+
+  --color-accent: #e8590c;        /* naranja — CTA primarios */
+  --color-accent-hover: #cf4c07;
+  --color-accent-bg: #fdece0;
+  --color-accent-ink: #ffffff;
+
+  --color-link: #2454c7;          /* azul — buscador, links, activos */
+  --color-link-hover: #1b3f9c;
+
+  --color-danger: #dc2626;
+  --color-danger-bg: #fdecec;
+  --color-success: #16a34a;
+  --color-success-bg: #e9f9ef;
+  --color-warning: #d97706;
+  --color-warning-bg: #fef3e0;
+
+  /* Tipografía */
+  --font-display: 'Sora', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  /* Escala */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-card: 0 1px 2px rgba(16, 26, 51, 0.06), 0 8px 20px -12px rgba(16, 26, 51, 0.18);
+  --shadow-raised: 0 4px 20px rgba(16, 26, 51, 0.14);
+  --shadow-nav: 0 2px 10px rgba(10, 26, 63, 0.18);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --max-width: 1240px;
+}
