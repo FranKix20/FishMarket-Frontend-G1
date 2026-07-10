@@ -1,8 +1,31 @@
 # FishMarket Cloud — Frontend del Marketplace (Grupo 1)
 
-Interfaz principal del marketplace, construida en React + Vite, que consume el BFF de Grupo 1 (`https://bff-mock-g1.vercel.app`).
+Interfaz principal del marketplace de artículos de pesca, construida en React + Vite, que consume el BFF de Grupo 1.
 
-Cumple los requisitos funcionales de la actividad de Grupo 1: iniciar sesión, buscar y paginar el catálogo, agregar productos al carrito, generar un pedido (checkout con idempotencia) y ver el estado del pedido. Además suma detalle de producto, notificaciones y el widget de chat (Grupo 11), que no eran obligatorios pero ya están conectados en el BFF.
+**Producción:** https://fish-market-frontend-g1.vercel.app
+**BFF (backend):** https://bff-mock-g1.vercel.app
+**Repositorio BFF:** https://github.com/FranKix20/Bff-mock-G1
+
+Cumple los requisitos funcionales pedidos para Grupo 1: iniciar sesión, buscar y paginar el catálogo, agregar productos al carrito, generar un pedido (checkout con idempotencia) y ver el estado del pedido. Además incluye detalle de producto, notificaciones y un widget de chat (Grupo 11), que no eran obligatorios pero ya están conectados en el BFF.
+
+## Cómo está armado el sistema (visión general)
+
+Son **dos proyectos separados**, cada uno con su propio repositorio de GitHub y su propio proyecto en Vercel:
+
+```
+┌──────────────────────────────┐        ┌──────────────────────────────┐
+│  FishMarket-Frontend-G1      │  HTTPS │  Bff-mock-G1                  │
+│  React + Vite (estático)     │ ─────▶ │  Node/Express (serverless)    │
+│  fish-market-frontend-g1     │        │  bff-mock-g1.vercel.app       │
+│  .vercel.app                 │ ◀───── │  + Supabase (persistencia)    │
+└──────────────────────────────┘        │  + proxys a G2,G3,G4,G5,G9,G11│
+                                          └──────────────────────────────┘
+```
+
+- El **frontend** no habla directo con los servicios de los otros grupos. Todo pasa por el BFF, que centraliza auth, errores, idempotencia y normaliza los formatos de cada grupo (snake_case/camelCase, etc).
+- El **BFF** valida el origen de las peticiones por CORS: solo acepta llamadas del dominio configurado en su variable de entorno `FRONTEND_URL` (hoy apunta a `https://fish-market-frontend-g1.vercel.app`).
+
+Por eso, si alguna vez cambias el dominio del frontend en Vercel, hay que actualizar `FRONTEND_URL` en el proyecto del BFF y hacer redeploy, o el navegador bloqueará las peticiones por CORS.
 
 ## Stack
 
@@ -20,19 +43,20 @@ frontend/
 │   ├── context/
 │   │   ├── AuthContext.jsx    # Login, registro (con auto-login), logout, sesión persistida
 │   │   └── CartContext.jsx    # Estado de carrito + workaround del GET-antes-de-POST
-│   ├── components/            # Navbar, ProductCard, CategoryPills, Pagination, ErrorBanner, ChatWidget, Tideline
+│   ├── components/            # Navbar, ProductCard, CategoryPills, Pagination, ErrorBanner, ChatWidget
 │   ├── pages/                 # Catálogo, Detalle de producto, Login, Registro, Carrito, Checkout, Pedidos, Detalle de pedido, Notificaciones
 │   └── styles/                # tokens.css (paleta/tipografía), global.css, layout.css, chat.css
 ├── index.html
 ├── vite.config.js
+├── vercel.json                 # Rewrite para que las rutas de React Router funcionen al recargar
 └── package.json
 ```
 
 ## Identidad visual
 
-Paleta clara "muelle al amanecer": navy (`#0a1a3f`) en el encabezado y elementos de marca, naranja (`#e8590c`) en las acciones principales (agregar al carrito, confirmar compra), azul (`#2454c7`) en el buscador y los enlaces activos. Tipografía Sora para títulos y Inter para el resto de la interfaz.
+Paleta "FishMarket Cloud": navy (`#0a1a3f`) en el encabezado y elementos de marca, naranja (`#e8590c`) en las acciones principales (agregar al carrito, confirmar compra), azul (`#2454c7`) en el buscador y los enlaces activos.
 
-## Rutas
+## Rutas de la aplicación
 
 | Ruta | Página | Protegida |
 |---|---|---|
@@ -44,31 +68,20 @@ Paleta clara "muelle al amanecer": navy (`#0a1a3f`) en el encabezado y elementos
 | `/pedidos`, `/pedidos/:orderId` | Historial y detalle de pedido | Sí |
 | `/notificaciones` | Notificaciones (marcar como leídas) | Sí |
 
-## Decisiones importantes (por qué el código es así)
+## Decisiones técnicas importantes (por qué el código es así)
 
-Estas decisiones vienen directo de los hallazgos que documentaron probando el BFF y los servicios reales — no son detalles arbitrarios:
+Estas decisiones vienen de hallazgos reales probando el BFF y los servicios de los otros grupos, no son detalles arbitrarios:
 
-1. **`register()` hace login automático por dentro** (`AuthContext.jsx`). El BFF persiste sesión en `/api/auth/login`, pero no en `/api/auth/register` — así que después de registrar, el frontend inicia sesión con las mismas credenciales sin pedírselas de nuevo al usuario.
-
+1. **`register()` hace login automático por dentro** (`AuthContext.jsx`). El BFF persiste sesión en `/api/auth/login`, pero no en `/api/auth/register` — el frontend inicia sesión con las mismas credenciales justo después de registrar.
 2. **`CartContext.addItem()` siempre hace un `GET` antes del `POST`.** Grupo 4 no crea el carrito automáticamente en el primer `POST /items` de un usuario nuevo — responde `404 Cart not found`. El `GET` previo lo inicializa.
+3. **Toda llamada a `/api/cart/*` y `/api/checkout` reenvía `Authorization: Bearer <token>`**, requisito de Grupo 4.
+4. **La `Idempotency-Key` del checkout se genera una sola vez por intento** y solo se renueva tras un pedido confirmado, para que un reintento por error de red no duplique el pedido.
+5. **El identificador de usuario para carrito/pedidos es `user.business_user_id`** (ej. `"USR-25"`), no el UUID interno que también devuelve el login.
+6. **Los estados de pedido no reconocidos no rompen la UI** — si Grupo 5 agrega un estado nuevo, se muestra tal cual en vez de fallar.
+7. **Las categorías del catálogo filtran por búsqueda de texto**, no por parámetro de categoría, porque `GET /api/products` de Grupo 3 no expone ese filtro.
+8. **El checkout no controla el resultado del pago.** `POST /api/checkout` no expone un parámetro para forzar aprobado/rechazado, así que la UI no promete algo que el backend no hace.
 
-3. **Toda llamada a `/api/cart/*` y `/api/checkout` reenvía `Authorization: Bearer <token>`.** Grupo 4 empezó a exigirlo recientemente en ambos endpoints.
-
-4. **La `Idempotency-Key` del checkout se genera una sola vez por intento** (`crypto.randomUUID()`), y solo se renueva tras un pedido confirmado. Si el usuario reintenta por un error de red, reenvía la misma key — así el BFF puede detectar el reintento y no duplicar el pedido.
-
-5. **El identificador de usuario para carrito/pedidos es `user.business_user_id`** (ej. `"USR-25"`), no el `user_id` interno (UUID) que también devuelve el login. Son campos distintos en la respuesta de Grupo 2, y las URLs de carrito/pedidos usan el primero.
-
-6. **Los estados de pedido no reconocidos no rompen la UI** (`utils/format.js`, `statusLabel`/`statusPillClass`). Si Grupo 5 agrega un estado nuevo que el frontend no anticipó, se muestra tal cual en vez de fallar.
-
-7. **Las categorías del catálogo filtran por búsqueda de texto, no por parámetro de categoría.** `GET /api/products` de Grupo 3 no expone un filtro de categoría, así que cada pill (`CategoryPills.jsx`) dispara `GET /api/products/search?q=<palabra clave>` — es funcional de extremo a extremo, no decorativo.
-
-8. **El precio y el orden en el catálogo se filtran en el cliente**, sobre la página ya cargada, porque el BFF no soporta esos parámetros. Si en el futuro Grupo 3 agrega filtros server-side, conviene mover esta lógica a la llamada API para no depender de traer todo el catálogo.
-
-9. **"Envío gratis sobre $50.000" es una regla puramente visual del frontend** (`CartPage.jsx`, `CheckoutPage.jsx`), no viene del BFF — el checkout real no recibe ni valida ese umbral. Si Grupo 4/5 implementan reglas de envío reales, hay que reemplazar esta constante por lo que devuelva el checkout.
-
-10. **El checkout no controla el resultado del pago.** La sección "Método de pago (simulado)" solo elige `paymentMethod`; no hay forma de forzar que el pago simulado sea aprobado o rechazado, porque `POST /api/checkout` no expone ese parámetro — se documenta así en la UI para no prometer algo que el backend no hace.
-
-## Configuración
+## Configuración local
 
 ```bash
 cp .env.example .env
@@ -78,9 +91,7 @@ cp .env.example .env
 VITE_API_BASE_URL=https://bff-mock-g1.vercel.app
 ```
 
-Para probar contra tu BFF corriendo en local, cambia el valor a `http://localhost:3001`.
-
-## Desarrollo local
+Para probar contra el BFF corriendo en tu máquina, cambia el valor a `http://localhost:3001`.
 
 ```bash
 npm install
@@ -89,22 +100,32 @@ npm run dev
 
 Abre `http://localhost:5173`.
 
-## Build y despliegue (Vercel)
+## Despliegue en Vercel
 
-```bash
-npm run build
-```
+1. Repositorio en GitHub, importado como proyecto nuevo en Vercel (Framework Preset: **Vite**, detectado automático).
+2. Variable de entorno `VITE_API_BASE_URL` = `https://bff-mock-g1.vercel.app`.
+3. **`vercel.json` con rewrite a `index.html`** — imprescindible para que las rutas de React Router (`/pedidos`, `/checkout`, etc.) no den 404 al recargar la página o entrar directo por URL:
+   ```json
+   {
+     "rewrites": [
+       { "source": "/(.*)", "destination": "/index.html" }
+     ]
+   }
+   ```
+4. En el proyecto del **BFF** en Vercel, agregar `FRONTEND_URL` = `https://fish-market-frontend-g1.vercel.app` y hacer redeploy, para que el CORS del backend acepte peticiones desde este dominio.
 
-Genera `dist/`. Para desplegar en Vercel:
+## Problemas resueltos durante el despliegue (para referencia futura)
 
-1. Sube este proyecto a un repositorio de GitHub (puede ser el mismo repo del BFF, en una carpeta `frontend/`, o uno separado).
-2. En Vercel: **New Project → Import** ese repo.
-3. **Framework Preset:** Vite (Vercel lo detecta automáticamente).
-4. Agrega la variable de entorno `VITE_API_BASE_URL` con la URL de tu BFF en producción.
-5. Deploy.
+| Síntoma | Causa | Solución |
+|---|---|---|
+| `NETWORK_ERROR` / catálogo vacío al entrar por una URL con hash (`...-hsiq0c3yp-....vercel.app`) | Esa URL de preview no coincide con el `FRONTEND_URL` configurado en el BFF, así que CORS la bloquea | Usar siempre el dominio de producción `fish-market-frontend-g1.vercel.app`, no las URLs de deployment individuales |
+| `404: NOT_FOUND` al recargar en `/pedidos`, `/checkout`, etc. | Vercel busca un archivo físico en esa ruta; una SPA solo tiene `index.html` | Agregar `vercel.json` con rewrite de todas las rutas a `index.html` |
+| CORS bloqueado al llamar al BFF desde el frontend | `FRONTEND_URL` no estaba seteada (o desactualizada) en el proyecto del BFF en Vercel | Configurar `FRONTEND_URL` con el dominio exacto del frontend y hacer redeploy del BFF |
 
-## Qué falta / posibles mejoras futuras
+## Qué falta / mejoras futuras
 
-- Refresh automático de token cuando expira (`/api/auth/refresh` ya está implementado en `client.js` pero no se dispara solo todavía — hoy, si el token expira, el usuario simplemente tiene que volver a iniciar sesión).
-- Página de perfil / edición de datos del usuario (no estaba en el alcance funcional pedido para Grupo 1).
-- Tests automatizados de UI (el proyecto no incluye pruebas E2E; las pruebas funcionales documentadas están del lado del BFF).
+- Refresh automático de token cuando expira (`/api/auth/refresh` ya está implementado en `client.js` pero no se dispara solo todavía).
+- Página de perfil / edición de datos del usuario.
+- Tests automatizados de UI (las pruebas funcionales documentadas hoy están del lado del BFF).
+- Checkout con `Idempotency-Key` y datos de pago sigue sin poder forzar aprobado/rechazado porque el endpoint de Grupo 4/5 no lo soporta aún.
+
