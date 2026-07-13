@@ -5,6 +5,29 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173
+    port: 5173,
+    proxy: {
+      '/api/chat/health': {
+        target: 'http://localhost:3010',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/chat\/health/, '/health'),
+        headers: {
+          'x-api-key': 'mk-chatbot-abc123xyz'
+        }
+      },
+      '/api/chat': {
+        target: 'http://localhost:3010',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/chat/, '/chat'),
+        headers: {
+          'x-api-key': 'mk-chatbot-abc123xyz'
+        }
+      },
+      '/api': {
+        target: 'https://bff-mock-g1.vercel.app',
+        changeOrigin: true
+      }
+    }
   }
 });
+

@@ -205,5 +205,18 @@ export const chatApi = {
       body: { sessionId, message, userId: userId ?? null }
     }),
 
-  faq: (category) => request(`/api/chat/faq/${category}`, { auth: false })
+  faq: (category) => request(`/api/chat/faq/${category}`, { auth: false }),
+
+  health: async () => {
+    try {
+      return await request('/api/chat/health', { auth: false });
+    } catch (err) {
+      // Fallback a llamada directa al Render si falla el proxy/BFF de producción
+      const res = await fetch('https://chat-bot-v-xzvi.onrender.com/health');
+      if (!res.ok) throw err;
+      const data = await res.json();
+      return { data };
+    }
+  }
 };
+
