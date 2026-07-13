@@ -99,26 +99,13 @@ export default function ChatWidget() {
       const res = await chatApi.faq(category);
       setFaqQuestions(res.data.items || []);
     } catch {
-      // Fallback robusto en caso de fallo de red/local
-      const fallbacks = {
-        faq_envios: [
-          { question: '¿Cuánto demora el despacho a regiones?', answer: 'El despacho a regiones tarda entre 3 y 5 días hábiles dependiendo de la zona.' },
-          { question: '¿Cómo puedo hacer seguimiento a mi despacho?', answer: 'Una vez enviado el pedido, recibirás un correo con el número de seguimiento.' }
-        ],
-        faq_pagos: [
-          { question: '¿Cuáles son los métodos de pago?', answer: 'Aceptamos tarjetas de débito, crédito y transferencias bancarias.' },
-          { question: '¿Puedo pagar en cuotas?', answer: 'Sí, puedes diferir tus compras en hasta 3 cuotas sin interés.' }
-        ],
-        faq_cuenta: [
-          { question: '¿Cómo puedo registrarme?', answer: 'Haz clic en el botón de Registro en la esquina superior derecha.' },
-          { question: '¿Cómo recupero mi contraseña?', answer: 'En la sección de inicio de sesión, haz clic en "¿Olvidaste tu contraseña?".' }
-        ],
-        faq_productos: [
-          { question: '¿Tienen garantía los productos?', answer: 'Todos los productos del marketplace tienen una garantía mínima legal de 6 meses.' },
-          { question: '¿Cómo hago una devolución?', answer: 'Ingresa a "Mis Compras" y selecciona "Solicitar Devolución".' }
-        ]
-      };
-      setFaqQuestions(fallbacks[category] || []);
+      // Si falla, no mostramos preguntas falsas (JSON fake) y avisamos que aún no está conectado al backend
+      setMessages((m) => [
+        ...m,
+        { from: 'bot', text: 'El servicio de preguntas frecuentes no está disponible en este momento porque el chatbot aún no se conecta al backend.' }
+      ]);
+      setFaqQuestions([]);
+      setSelectedFaqCategory(null);
     } finally {
       setSending(false);
     }
