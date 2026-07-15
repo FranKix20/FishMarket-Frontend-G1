@@ -263,3 +263,110 @@
   color: var(--color-accent);
   font-weight: 600;
 }
+
+/* Cabecera + navegación por secciones */
+.admin-topbar {
+  margin-bottom: var(--space-4);
+}
+.admin-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-accent);
+}
+.admin-topbar .admin-sub {
+  margin: 2px 0 0;
+}
+.admin-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-5);
+  overflow-x: auto;
+}
+.admin-tab {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.admin-tab:hover {
+  color: var(--color-text);
+}
+.admin-tab.is-active {
+  color: var(--color-link);
+  border-bottom-color: var(--color-link);
+}
+
+/* Apartados "en construcción" (para que G1 los implemente) */
+.admin-wip {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.admin-stub-note {
+  margin-bottom: var(--space-5);
+}
+.admin-stub-note p {
+  margin: 0 0 var(--space-3);
+  color: var(--color-text);
+}
+.admin-stub-note h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin: var(--space-4) 0 var(--space-2);
+}
+.admin-stub-todos {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.admin-stub-backend {
+  margin: var(--space-4) 0 0 !important;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-muted) !important;
+}
+.admin-stub-table {
+  opacity: 0.7;
+}
+
+/* Tarjetas de métricas (reportería) */
+.admin-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.admin-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.admin-metric__label {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+.admin-metric__value {
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--color-text-faint);
+}

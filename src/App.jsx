@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
@@ -12,8 +12,12 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AccountPage from './pages/AccountPage';
-import AdminPage from './pages/AdminPage';
 import AdminRoute from './components/AdminRoute';
+import AdminLayout from './components/AdminLayout';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminProducts from './pages/admin/AdminProducts';
+import AdminShipments from './pages/admin/AdminShipments';
+import AdminReports from './pages/admin/AdminReports';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
@@ -52,10 +56,16 @@ function AppRoutes() {
         path="/admin"
         element={
           <AdminRoute>
-            <AdminPage />
+            <AdminLayout />
           </AdminRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="/admin/usuarios" replace />} />
+        <Route path="usuarios" element={<AdminUsers />} />
+        <Route path="productos" element={<AdminProducts />} />
+        <Route path="envios" element={<AdminShipments />} />
+        <Route path="reportes" element={<AdminReports />} />
+      </Route>
       <Route
         path="/carro"
         element={

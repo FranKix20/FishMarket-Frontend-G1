@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { adminApi } from '../api/admin';
-import ErrorBanner from '../components/ErrorBanner';
-import Tideline from '../components/Tideline';
-import AdminUserModal from '../components/AdminUserModal';
+import { adminApi } from '../../api/admin';
+import ErrorBanner from '../../components/ErrorBanner';
+import Tideline from '../../components/Tideline';
+import AdminUserModal from '../../components/AdminUserModal';
 
 const PAGE_SIZE = 8;
 
@@ -29,7 +29,7 @@ function fmtDate(iso) {
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
 }
 
-export default function AdminPage() {
+export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -94,7 +94,7 @@ export default function AdminPage() {
   const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
-    <div className="container admin">
+    <>
       <div className="admin-head">
         <div>
           <h1>Gestión de usuarios</h1>
@@ -245,6 +245,6 @@ export default function AdminPage() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }
