@@ -6,26 +6,26 @@ import { useEffect, useRef, useState } from 'react';
 // alcance es exactamente lo que se necesita: autocompletar la dirección
 // sin agregar credenciales ni costo.
 const SEARCH_URL = 'https://nominatim.openstreetmap.org/search';
+const REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 const MIN_CHARS = 4;
 const DEBOUNCE_MS = 450;
 
-/**
- * Extrae "Calle Número" desde la respuesta de Nominatim en vez de usar
- * su display_name completo (que repite comuna/región/país y queda muy
- * largo dentro del input).
- */
-function shortLabel(item) {
-  const a = item.address || {};
-  const road = a.road || a.pedestrian || a.footway || '';
-  const houseNumber = a.house_number || '';
-  const composed = [road, houseNumber].filter(Boolean).join(' ');
-  return composed || item.display_name.split(',')[0];
+function houseNumberFromQuery(query) {
+  const match = query.trim().match(/(\d+[a-zA-Z]?)\s*$/);
+  return match ? match[1] : '';
+}
+
+function buildStreetLabel(address, fallbackNumber) {
+  const road = address.road || address.pedestrian || address.footway || '';
+  const number = address.house_number || fallbackNumber || '';
+  return [road, number].filter(Boolean).join(' ') || null;
 }
 
 export default function StreetAutocomplete({ value, onChange, onSelectSuggestion, id, placeholder }) {
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const debounceRef = useRef(null);
   const containerRef = useRef(null);
   const skipNextSearch = useRef(false);
@@ -79,16 +79,52 @@ export default function StreetAutocomplete({ value, onChange, onSelectSuggestion
     return () => clearTimeout(debounceRef.current);
   }, [value]);
 
-  const handleSelect = (item) => {
-    const a = item.address || {};
+  const handleSelect = async (item) => {
+    const typedNumber = houseNumberFromQuery(value);
     skipNextSearch.current = true;
     setOpen(false);
     setSuggestions([]);
+
+    // La búsqueda inicial de Nominatim a veces devuelve solo el centro de
+    // la calle (sin número exacto ni código postal), aunque el usuario sí
+    // haya escrito el número. Una consulta de "reverse geocoding" sobre
+    // las coordenadas exactas del resultado elegido, a nivel de edificio
+    // (zoom=18), suele traer el house_number y el postcode reales — así
+    // se completa la dirección exacta en vez de quedarse con el
+    // aproximado de la búsqueda por texto.
+    let refinedAddress = item.address || {};
+    setResolving(true);
+    try {
+      const params = new URLSearchParams({
+        format: 'jsonv2',
+        addressdetails: '1',
+        zoom: '18',
+        'accept-language': 'es',
+        lat: item.lat,
+        lon: item.lon
+      });
+      const res = await fetch(`${REVERSE_URL}?${params.toString()}`);
+      if (res.ok) {
+        const reverseData = await res.json();
+        if (reverseData?.address) {
+          // El reverse gana solo en los campos que sí trae; si tampoco
+          // tiene house_number, se conserva el de la búsqueda original
+          // (o el que el usuario tipeó a mano).
+          refinedAddress = { ...item.address, ...reverseData.address };
+        }
+      }
+    } catch {
+      // Si el reverse falla, se sigue con lo que ya trajo la búsqueda —
+      // no vale la pena bloquear la selección por esto.
+    } finally {
+      setResolving(false);
+    }
+
     onSelectSuggestion({
-      street: shortLabel(item),
-      city: a.city || a.town || a.municipality || a.village || a.county || '',
-      region: a.state || '',
-      zipCode: a.postcode || ''
+      street: buildStreetLabel(refinedAddress, typedNumber) || item.display_name.split(',')[0],
+      city: refinedAddress.city || refinedAddress.town || refinedAddress.municipality || refinedAddress.village || refinedAddress.county || '',
+      region: refinedAddress.state || '',
+      zipCode: refinedAddress.postcode || ''
     });
   };
 
@@ -103,7 +139,7 @@ export default function StreetAutocomplete({ value, onChange, onSelectSuggestion
         onFocus={() => suggestions.length > 0 && setOpen(true)}
         placeholder={placeholder}
       />
-      {loading && <span className="address-autocomplete__spinner" aria-hidden="true" />}
+      {(loading || resolving) && <span className="address-autocomplete__spinner" aria-hidden="true" />}
       {open && suggestions.length > 0 && (
         <ul className="address-autocomplete__list" role="listbox">
           {suggestions.map((item) => (
