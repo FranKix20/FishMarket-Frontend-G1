@@ -54,13 +54,24 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  // Fusiona cambios en el usuario en memoria y en localStorage (p. ej. tras
+  // editar el nombre en "Mi cuenta"), para que el navbar se actualice al vuelo.
+  const updateUser = useCallback((patch) => {
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...patch };
+      saveSession({ user: next });
+      return next;
+    });
+  }, []);
+
   const value = {
     user,
     isAuthenticated: !!user,
     checkingSession,
     login,
     register,
-    logout
+    logout,
+    updateUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
