@@ -88,6 +88,14 @@ export default function Navbar() {
                       <p>{user?.fullName || user?.full_name || 'Mi cuenta'}</p>
                       <p title={user?.email}>{user?.email}</p>
                     </div>
+                    <Link to="/cuenta" onClick={() => setMenuOpen(false)}>
+                      Mi perfil
+                    </Link>
+                    {user?.role === 'admin' && (
+                      <Link to="/admin" className="is-admin-link" onClick={() => setMenuOpen(false)}>
+                        Panel de admin
+                      </Link>
+                    )}
                     <Link to="/pedidos" onClick={() => setMenuOpen(false)}>
                       Mis pedidos
                     </Link>
@@ -180,6 +188,10 @@ export default function Navbar() {
                   <p title={user?.email}>{user?.email}</p>
                 </div>
                 <Link to="/" onClick={() => setMobileOpen(false)}>Catálogo</Link>
+                <Link to="/cuenta" onClick={() => setMobileOpen(false)}>Mi perfil</Link>
+                {user?.role === 'admin' && (
+                  <Link to="/admin" className="is-admin-link" onClick={() => setMobileOpen(false)}>Panel de admin</Link>
+                )}
                 <Link to="/pedidos" onClick={() => setMobileOpen(false)}>Mis pedidos</Link>
                 <Link to="/notificaciones" onClick={() => setMobileOpen(false)}>Notificaciones</Link>
                 <Link to="/carro" onClick={() => setMobileOpen(false)}>Carrito {itemCount > 0 ? `(${itemCount})` : ''}</Link>
