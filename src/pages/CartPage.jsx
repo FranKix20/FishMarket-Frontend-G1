@@ -38,7 +38,7 @@ export default function CartPage() {
     } catch (err) {
       setItemErrors((prev) => ({
         ...prev,
-        [productId]: err?.response?.data?.message || 'No se pudo agregar más unidades.'
+        [productId]: err?.message || 'No se pudo agregar más unidades.'
       }));
     } finally {
       setBusyId(null);
