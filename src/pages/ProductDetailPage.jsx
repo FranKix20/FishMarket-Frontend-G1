@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import ErrorBanner from '../components/ErrorBanner';
 import Tideline from '../components/Tideline';
+import ProductCard from '../components/ProductCard';
 import { formatCLP } from '../utils/format';
 
 function stockBadge(stockVisible) {
@@ -25,6 +26,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [related, setRelated] = useState([]);
 
   const load = async () => {
     setLoading(true);
@@ -42,7 +44,32 @@ export default function ProductDetailPage() {
   useEffect(() => {
     load();
     setQuantity(1);
+    window.scrollTo({ top: 0 });
   }, [productId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Productos relacionados: intenta traer más de la misma categoría; si el
+  // catálogo no soporta ese filtro server-side, cae a los primeros del
+  // listado general (igual de válido, solo menos dirigido).
+  useEffect(() => {
+    let cancelled = false;
+    async function loadRelated() {
+      if (!product) return;
+      try {
+        const { data } = product.categoryName
+          ? await productsApi.search(product.categoryName, 1, 8)
+          : await productsApi.list(1, 8);
+        if (!cancelled) {
+          setRelated((data.data || []).filter((p) => p.id !== product.id).slice(0, 4));
+        }
+      } catch {
+        if (!cancelled) setRelated([]);
+      }
+    }
+    loadRelated();
+    return () => {
+      cancelled = true;
+    };
+  }, [product]);
 
   const handleAdd = async () => {
     if (!isAuthenticated) {
@@ -58,6 +85,14 @@ export default function ProductDetailPage() {
     } finally {
       setAdding(false);
     }
+  };
+
+  const handleAddRelated = async (id, qty) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    await addItem(id, qty);
   };
 
   if (loading) {
@@ -137,6 +172,53 @@ export default function ProductDetailPage() {
               {adding ? 'Agregando…' : justAdded ? 'Agregado ✓' : outOfStock ? 'Sin stock' : 'Agregar al carrito'}
             </button>
           </div>
+
+          <table className="specs-table">
+            <tbody>
+              <tr>
+                <th>Categoría</th>
+                <td>{product.categoryName || 'Sin categoría'}</td>
+              </tr>
+              <tr>
+                <th>Disponibilidad</th>
+                <td>{outOfStock ? 'Sin stock' : `${product.stockVisible} unidades disponibles`}</td>
+              </tr>
+              <tr>
+                <th>SKU</th>
+                <td className="mono">{product.id}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {related.length > 0 && (
+        <section className="related-section">
+          <h2 className="related-section__title">También te puede interesar</h2>
+          <div className="product-grid">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} onAdd={handleAddRelated} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="trust-strip">
+        <div className="trust-strip__item">
+          <strong>Compra segura</strong>
+          Tus datos protegidos
+        </div>
+        <div className="trust-strip__item">
+          <strong>Cambios y devoluciones</strong>
+          Hasta 30 días
+        </div>
+        <div className="trust-strip__item">
+          <strong>Soporte 24/7</strong>
+          ¿Necesitas ayuda?
+        </div>
+        <div className="trust-strip__item">
+          <strong>Garantía oficial</strong>
+          Productos originales
         </div>
       </div>
     </div>

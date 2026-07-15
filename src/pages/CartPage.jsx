@@ -65,39 +65,47 @@ export default function CartPage() {
             <div className="card">
               {items.map((item) => (
                 <div className="cart-item" key={item.id || item.productId}>
-                  <div className="cart-item__thumb" aria-hidden="true">
-                    🎣
-                  </div>
-                  <div className="cart-item__info">
-                    <p>{item.productName || item.productId}</p>
-                    <p className="qty">
-                      {item.quantity} × {formatCLP(item.unitPrice)}
-                    </p>
+                  <div className="cart-item__main">
+                    <div className="cart-item__thumb">
+                      {item.productImage ? (
+                        <img src={item.productImage} alt={item.productName || ''} loading="lazy" />
+                      ) : (
+                        <span aria-hidden="true">🎣</span>
+                      )}
+                    </div>
+                    <div className="cart-item__info">
+                      <p>{item.productName || item.productId}</p>
+                      <p className="qty">
+                        {item.quantity} × {formatCLP(item.unitPrice)}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="qty-stepper" style={{ flexShrink: 0 }}>
+                  <div className="cart-item__controls">
+                    <div className="qty-stepper" style={{ flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        aria-label="Agregar una unidad más"
+                        onClick={() => handleAddOne(item.productId)}
+                        disabled={busyId === item.productId}
+                      >
+                        +
+                      </button>
+                      <span>{item.quantity}</span>
+                    </div>
+
+                    <span className="cart-item__price">{formatCLP(item.subtotal)}</span>
+
                     <button
                       type="button"
-                      aria-label="Agregar una unidad más"
-                      onClick={() => handleAddOne(item.productId)}
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleRemove(item.productId)}
                       disabled={busyId === item.productId}
+                      aria-label="Quitar del carrito"
                     >
-                      +
+                      {busyId === item.productId ? '…' : '🗑'}
                     </button>
-                    <span>{item.quantity}</span>
                   </div>
-
-                  <span className="cart-item__price">{formatCLP(item.subtotal)}</span>
-
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleRemove(item.productId)}
-                    disabled={busyId === item.productId}
-                    aria-label="Quitar del carrito"
-                  >
-                    {busyId === item.productId ? '…' : '🗑'}
-                  </button>
                 </div>
               ))}
             </div>

@@ -617,6 +617,45 @@
   margin-top: var(--space-5);
 }
 
+.specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+.specs-table tr {
+  border-bottom: 1px solid var(--color-border);
+}
+.specs-table th,
+.specs-table td {
+  text-align: left;
+  padding: 10px 0;
+  font-size: 13.5px;
+  font-weight: 400;
+}
+.specs-table th {
+  width: 160px;
+  color: var(--color-text-faint);
+  font-weight: 600;
+}
+.specs-table td {
+  color: var(--color-text);
+}
+.specs-table td.mono {
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.related-section {
+  margin-top: var(--space-8);
+  padding-top: var(--space-7);
+  border-top: 1px solid var(--color-border);
+}
+.related-section__title {
+  font-size: 20px;
+  margin-bottom: var(--space-5);
+}
+
 /* ---------------------------------------------------------------- */
 /* Carrito                                                            */
 /* ---------------------------------------------------------------- */
@@ -635,12 +674,37 @@
 .cart-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--color-border);
 }
 .cart-item:last-child {
   border-bottom: none;
+}
+.cart-item__main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 1;
+  min-width: 0;
+}
+.cart-item__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+@media (max-width: 480px) {
+  .cart-item {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+  .cart-item__controls {
+    justify-content: space-between;
+  }
 }
 .cart-item__thumb {
   width: 68px;
@@ -667,6 +731,7 @@
   font-weight: 600;
   font-size: 14.5px;
   color: var(--color-text);
+  word-break: break-word;
 }
 .cart-item__info .qty {
   font-size: 13px;
