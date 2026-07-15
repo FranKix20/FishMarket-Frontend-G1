@@ -122,6 +122,24 @@ Abre `http://localhost:5173`.
 | `404: NOT_FOUND` al recargar en `/pedidos`, `/checkout`, etc. | Vercel busca un archivo físico en esa ruta; una SPA solo tiene `index.html` | Agregar `vercel.json` con rewrite de todas las rutas a `index.html` |
 | CORS bloqueado al llamar al BFF desde el frontend | `FRONTEND_URL` no estaba seteada (o desactualizada) en el proyecto del BFF en Vercel | Configurar `FRONTEND_URL` con el dominio exacto del frontend y hacer redeploy del BFF |
 
+## Chatbot (Grupo 11)
+
+El widget de chat (esquina inferior derecha) ya está integrado con FAQ por categoría y un panel de auditoría de conexiones (ícono ⚙️). Todo pasa por el BFF (`/api/chat`, `/api/chat/faq/:category`, `/api/chat/health`) — el frontend nunca llama directo a Render, así que no depende de que ese servicio tenga CORS abierto. Si el panel de conexiones muestra "sin comunicación", el problema está del lado del BFF (variable `CHATBOT_SERVICE_URL` no configurada o el servicio de Render dormido) o Render, no de este repo.
+
+## Cambios de esta ronda — responsividad
+
+El navbar no tenía versión mobile (se habría visto desbordado en celular: buscador + cuenta + carrito + texto duplicado todo en una sola fila fija). Se rediseñó y se revisaron además otros puntos de fricción en pantallas angostas:
+
+- **Navbar**: menú hamburguesa bajo 768px, con panel desplegable (buscador, catálogo, cuenta, pedidos, notificaciones, carrito, cerrar sesión). Carrito siempre visible como ícono compacto. Se quitó el texto duplicado "Mis pedidos | Salir" (ya vivía en el menú de cuenta).
+- **Panel de filtros del catálogo y resumen del carrito**: dejan de quedar `sticky` cuando pasan a layout de una sola columna en mobile (antes se quedaban "pegados" de forma rara al hacer scroll).
+- **Stepper del checkout** (Carrito → Entrega y pago → Confirmación): se desbordaba en pantallas angostas (320–375px). Ahora reduce círculos, líneas y tipografía bajo 480px.
+- **Tracker de estado del pedido** (5 pasos: creado, stock reservado, pago, enviado, entregado): mismo ajuste de tamaño en pantallas muy pequeñas para que las etiquetas no se amontonen.
+- **Padding general**: `.container` y `.panel` reducen su padding bajo 480px para no restarle tanto espacio útil al contenido en teléfonos chicos.
+
+Pendiente para una próxima ronda (no bloqueante, pero queda anotado):
+- Rediseño visual más a fondo (paleta/tipografía ya siguen la identidad "FishMarket Cloud"; lo que falta es más una revisión de detalle que un cambio estructural).
+- Layout para dashboards de otros grupos: **aún sin definir** porque todavía no entregan la especificación de cómo lo van a exponer (¿iframe embebido?, ¿ruta propia con datos vía API?, ¿link externo?). En cuanto tengan ese detalle, se define si va como una nueva ruta `/panel` con un slot por grupo, o como enlaces externos desde el menú de cuenta.
+
 ## Qué falta / mejoras futuras
 
 - Refresh automático de token cuando expira (`/api/auth/refresh` ya está implementado en `client.js` pero no se dispara solo todavía).

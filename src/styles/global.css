@@ -236,6 +236,18 @@ button {
   }
 }
 
+@media (max-width: 480px) {
+  .container {
+    padding: 0 var(--space-4);
+  }
+  .panel {
+    padding: var(--space-4);
+  }
+  .confirmation-card {
+    padding: var(--space-5);
+  }
+}
+
 /* ---------------------------------------------------------------- */
 /* Tarjetas / superficies                                            */
 /* ---------------------------------------------------------------- */
