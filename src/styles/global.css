@@ -236,6 +236,70 @@ button {
   }
 }
 
+/* ---------------------------------------------------------------- */
+/* Autocompletado de dirección                                       */
+/* ---------------------------------------------------------------- */
+.address-autocomplete {
+  position: relative;
+}
+.address-autocomplete__spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-border-strong);
+  border-top-color: var(--color-link);
+  border-radius: 50%;
+  animation: address-spin 0.7s linear infinite;
+}
+@keyframes address-spin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+.address-autocomplete__list {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.address-autocomplete__list li + li {
+  margin-top: 2px;
+}
+.address-autocomplete__list button {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+.address-autocomplete__list button:hover {
+  background: var(--color-surface-hover);
+}
+.address-autocomplete__pin {
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
 @media (max-width: 480px) {
   .container {
     padding: 0 var(--space-4);
