@@ -27,7 +27,7 @@ export default function ProductCard({ product, onAdd }) {
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 1800);
     } catch (err) {
-      setAddError(err?.response?.data?.message || 'No se pudo agregar al carrito.');
+      setAddError(err?.message || 'No se pudo agregar al carrito.');
     } finally {
       setAdding(false);
     }
