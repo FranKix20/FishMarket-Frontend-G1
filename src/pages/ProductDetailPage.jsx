@@ -26,6 +26,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [addError, setAddError] = useState(null);
   const [related, setRelated] = useState([]);
 
   const load = async () => {
@@ -78,10 +79,13 @@ export default function ProductDetailPage() {
     }
     setAdding(true);
     setJustAdded(false);
+    setAddError(null);
     try {
       await addItem(product.id, quantity);
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 1800);
+    } catch (err) {
+      setAddError(err?.response?.data?.message || 'No se pudo agregar al carrito.');
     } finally {
       setAdding(false);
     }
@@ -164,7 +168,11 @@ export default function ProductDetailPage() {
                 −
               </button>
               <span>{quantity}</span>
-              <button type="button" onClick={() => setQuantity((q) => q + 1)} disabled={outOfStock}>
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => (typeof product.stockVisible === 'number' ? Math.min(product.stockVisible, q + 1) : q + 1))}
+                disabled={outOfStock || (typeof product.stockVisible === 'number' && quantity >= product.stockVisible)}
+              >
                 +
               </button>
             </div>
@@ -172,6 +180,14 @@ export default function ProductDetailPage() {
               {adding ? 'Agregando…' : justAdded ? 'Agregado ✓' : outOfStock ? 'Sin stock' : 'Agregar al carrito'}
             </button>
           </div>
+          {typeof product.stockVisible === 'number' && quantity >= product.stockVisible && !outOfStock && (
+            <p className="product-detail__stock-hint">Llegaste al máximo disponible ({product.stockVisible}).</p>
+          )}
+          {addError && (
+            <p className="product-detail__error" role="alert">
+              {addError}
+            </p>
+          )}
 
           <table className="specs-table">
             <tbody>
