@@ -12,6 +12,7 @@ export default function CartPage() {
   const { cart, loading, error, addItem, removeItem, refresh } = useCart();
   const navigate = useNavigate();
   const [busyId, setBusyId] = useState(null);
+  const [itemErrors, setItemErrors] = useState({});
 
   const items = cart?.items || [];
   const subtotal = cart?.totalAmount ?? items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
@@ -31,8 +32,14 @@ export default function CartPage() {
 
   const handleAddOne = async (productId) => {
     setBusyId(productId);
+    setItemErrors((prev) => ({ ...prev, [productId]: null }));
     try {
       await addItem(productId, 1);
+    } catch (err) {
+      setItemErrors((prev) => ({
+        ...prev,
+        [productId]: err?.response?.data?.message || 'No se pudo agregar más unidades.'
+      }));
     } finally {
       setBusyId(null);
     }
@@ -87,7 +94,10 @@ export default function CartPage() {
                         type="button"
                         aria-label="Agregar una unidad más"
                         onClick={() => handleAddOne(item.productId)}
-                        disabled={busyId === item.productId}
+                        disabled={
+                          busyId === item.productId ||
+                          (typeof item.stockAvailable === 'number' && item.quantity >= item.stockAvailable)
+                        }
                       >
                         +
                       </button>
@@ -106,6 +116,14 @@ export default function CartPage() {
                       {busyId === item.productId ? '…' : '🗑'}
                     </button>
                   </div>
+                  {typeof item.stockAvailable === 'number' && item.quantity >= item.stockAvailable && (
+                    <p className="cart-item__stock-hint">Llegaste al máximo disponible ({item.stockAvailable}).</p>
+                  )}
+                  {itemErrors[item.productId] && (
+                    <p className="cart-item__error" role="alert">
+                      {itemErrors[item.productId]}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
