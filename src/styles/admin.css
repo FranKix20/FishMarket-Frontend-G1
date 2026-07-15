@@ -178,6 +178,37 @@
   background: var(--color-danger-bg);
   color: var(--color-danger);
 }
+.admin-badge.ship-status-created {
+  background: #eef2f6;
+  color: var(--color-text-muted);
+}
+.admin-badge.ship-status-picking {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.admin-badge.ship-status-assigned {
+  background: var(--color-accent-bg);
+  color: var(--color-accent-hover);
+}
+.admin-badge.ship-status-out_for_delivery {
+  background: #e6f0ff;
+  color: #2454c7;
+}
+.admin-badge.ship-status-delivered {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.admin-badge.ship-status-failed {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+.admin-select-sm {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  font-size: 12.5px;
+  background: var(--color-surface);
+}
 .admin-verified {
   color: var(--color-success);
   font-weight: 800;
