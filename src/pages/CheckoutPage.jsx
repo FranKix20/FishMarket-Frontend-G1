@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { checkoutApi, uuid } from '../api/client';
 import ErrorBanner from '../components/ErrorBanner';
+import StreetAutocomplete from '../components/StreetAutocomplete';
+import { CHILE_REGIONS, comunasForRegion } from '../data/chileRegions';
 import { formatCLP } from '../utils/format';
 
 const PAYMENT_METHODS = [
@@ -52,6 +54,33 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [confirmedOrder, setConfirmedOrder] = useState(null);
+
+  // Comunas disponibles para la región seleccionada — alimenta el
+  // datalist de "Ciudad" para que autocomplete sin tener que escribirla
+  // entera, pero sigue aceptando texto libre si la comuna real no está
+  // en el listado oficial (346 comunas, por si falta alguna muy nueva).
+  const availableComunas = useMemo(() => comunasForRegion(address.region), [address.region]);
+
+  function matchKnownRegion(rawRegion) {
+    if (!rawRegion) return null;
+    const found = CHILE_REGIONS.find(
+      (r) => r.region.toLowerCase().includes(rawRegion.toLowerCase()) || rawRegion.toLowerCase().includes(r.region.toLowerCase())
+    );
+    return found ? found.region : null;
+  }
+
+  // Cuando el usuario elige una sugerencia real de dirección, se rellenan
+  // también ciudad/región/código postal si Nominatim los trae — así no
+  // hay que tipear la dirección completa a mano.
+  const handleStreetSuggestion = (suggestion) => {
+    setAddress((a) => ({
+      ...a,
+      street: suggestion.street || a.street,
+      city: suggestion.city || a.city,
+      region: matchKnownRegion(suggestion.region) || a.region,
+      zipCode: suggestion.zipCode || a.zipCode
+    }));
+  };
 
   useEffect(() => {
     if (items.length === 0 && !confirmedOrder) {
@@ -119,34 +148,51 @@ export default function CheckoutPage() {
             <h2 style={{ fontSize: 16, marginBottom: 16 }}>📍 Dirección de entrega</h2>
             <div className="field">
               <label htmlFor="street">Dirección</label>
-              <input
+              <StreetAutocomplete
                 id="street"
-                required
                 value={address.street}
-                onChange={(e) => setAddress((a) => ({ ...a, street: e.target.value }))}
-                placeholder="Av. Siempre Viva 1234, Depto 56"
+                onChange={(v) => setAddress((a) => ({ ...a, street: v }))}
+                onSelectSuggestion={handleStreetSuggestion}
+                placeholder="Empieza a escribir tu calle…"
               />
+              <span style={{ fontSize: 11.5, color: 'var(--color-text-faint)' }}>
+                Escribe al menos 4 letras para ver sugerencias reales, o ingresa la dirección manualmente.
+              </span>
             </div>
             <div className="field-row">
               <div className="field">
-                <label htmlFor="city">Ciudad</label>
-                <input
-                  id="city"
-                  required
-                  value={address.city}
-                  onChange={(e) => setAddress((a) => ({ ...a, city: e.target.value }))}
-                  placeholder="Valparaíso"
-                />
-              </div>
-              <div className="field">
                 <label htmlFor="region">Región</label>
-                <input
+                <select
                   id="region"
                   required
                   value={address.region}
-                  onChange={(e) => setAddress((a) => ({ ...a, region: e.target.value }))}
-                  placeholder="Región de Valparaíso"
+                  onChange={(e) => setAddress((a) => ({ ...a, region: e.target.value, city: '' }))}
+                >
+                  <option value="" disabled>
+                    Selecciona tu región
+                  </option>
+                  {CHILE_REGIONS.map((r) => (
+                    <option key={r.region} value={r.region}>
+                      {r.region}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="city">Comuna</label>
+                <input
+                  id="city"
+                  required
+                  list="comunas-list"
+                  value={address.city}
+                  onChange={(e) => setAddress((a) => ({ ...a, city: e.target.value }))}
+                  placeholder={address.region ? 'Escribe o elige tu comuna' : 'Elige primero la región'}
                 />
+                <datalist id="comunas-list">
+                  {availableComunas.map((comuna) => (
+                    <option key={comuna} value={comuna} />
+                  ))}
+                </datalist>
               </div>
             </div>
             <div className="field">
