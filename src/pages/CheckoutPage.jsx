@@ -156,7 +156,7 @@ export default function CheckoutPage() {
                 placeholder="Empieza a escribir tu calle…"
               />
               <span style={{ fontSize: 11.5, color: 'var(--color-text-faint)' }}>
-                Escribe al menos 4 letras para ver sugerencias reales, o ingresa la dirección manualmente.
+                Incluye el número (ej. "Av. Providencia 1234") y elige una sugerencia para completar el código postal exacto.
               </span>
             </div>
             <div className="field-row">
@@ -240,8 +240,12 @@ export default function CheckoutPage() {
           <h2>Resumen del pedido</h2>
           {items.map((item) => (
             <div className="order-summary-item" key={item.id || item.productId}>
-              <div className="order-summary-item__thumb" aria-hidden="true">
-                🎣
+              <div className="order-summary-item__thumb">
+                {item.productImage ? (
+                  <img src={item.productImage} alt={item.productName || ''} loading="lazy" />
+                ) : (
+                  <span aria-hidden="true">🎣</span>
+                )}
               </div>
               <div className="order-summary-item__info">
                 <p>{item.productName || item.productId}</p>
