@@ -34,6 +34,12 @@ export default function LoginPage() {
         <h1>Iniciar sesión</h1>
         <p className="auth-card__subtitle">Ingresa tus credenciales para acceder a tu cuenta.</p>
 
+        {(location.state?.passwordReset || location.state?.passwordChanged) && (
+          <div className="banner banner-success" role="status">
+            <p>Tu contraseña se actualizó. Inicia sesión con la nueva contraseña.</p>
+          </div>
+        )}
+
         {error && <ErrorBanner error={error} />}
 
         <form onSubmit={handleSubmit}>
@@ -68,6 +74,9 @@ export default function LoginPage() {
         </form>
 
         <p className="auth-card__switch">
+          <Link to="/recuperar-contrasena">¿Olvidaste tu contraseña?</Link>
+        </p>
+        <p className="auth-card__switch" style={{ marginTop: 4 }}>
           ¿No tienes cuenta? <Link to="/registro">Crea una aquí</Link>
         </p>
       </div>
