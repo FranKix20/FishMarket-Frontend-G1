@@ -370,3 +370,80 @@
   font-family: var(--font-display);
   color: var(--color-text-faint);
 }
+
+/* Celda producto (catálogo) */
+.admin-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.admin-product__thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-hover);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.admin-product__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.admin-product__thumb span {
+  font-size: 9px;
+  color: var(--color-text-faint);
+  text-align: center;
+  line-height: 1.2;
+}
+.admin-product__name {
+  font-weight: 600;
+}
+
+/* Botón tipo enlace (alta rápida de categoría en el modal) */
+.admin-link-btn {
+  background: none;
+  border: none;
+  color: var(--color-link);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 var(--space-4);
+  text-align: left;
+}
+.admin-link-btn:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+.admin-inline-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.admin-inline-add input {
+  flex: 1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  font: inherit;
+  color: var(--color-text);
+}
+
+/* Textarea en .field (descripción de producto) */
+.field textarea {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  padding: 11px 12px;
+  color: var(--color-text);
+  font: inherit;
+  resize: vertical;
+}
+.field textarea:focus {
+  outline: none;
+  border-color: var(--color-link);
+}
