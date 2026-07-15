@@ -642,6 +642,19 @@
 .cart-item:last-child {
   border-bottom: none;
 }
+@media (max-width: 480px) {
+  .cart-item {
+    flex-wrap: wrap;
+    padding: var(--space-4);
+  }
+  .cart-item__info {
+    flex-basis: calc(100% - 84px);
+  }
+  .cart-item__price {
+    width: auto;
+    margin-left: auto;
+  }
+}
 .cart-item__thumb {
   width: 68px;
   height: 68px;
@@ -667,6 +680,8 @@
   font-weight: 600;
   font-size: 14.5px;
   color: var(--color-text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .cart-item__info .qty {
   font-size: 13px;
