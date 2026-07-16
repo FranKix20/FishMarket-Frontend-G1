@@ -26,8 +26,6 @@ function pct(n) {
 }
 
 export default function AdminReports() {
-  const reportsUrl = import.meta.env.VITE_REPORTS_URL;
-
   const [sales, setSales] = useState(null);
   const [products, setProducts] = useState(null);
   const [status, setStatus] = useState(null);
@@ -75,11 +73,6 @@ export default function AdminReports() {
             )}
           </p>
         </div>
-        {reportsUrl && (
-          <a href={reportsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-            Ver dashboard completo de G10 ↗
-          </a>
-        )}
       </div>
 
       {error && <ErrorBanner error={error} onRetry={load} />}
