@@ -453,3 +453,40 @@
     height: calc(100vh - 90px);
   }
 }
+
+/* ==========================================================================
+   MEJORAS VISUALES DE AUTENTICACIÓN
+   ========================================================================== */
+
+.chat-widget__header-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.chat-widget__header-title {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.chat-widget__session-badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.chat-widget__session-badge--guest {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-text-on-navy-muted);
+}
+
+.chat-widget__session-badge--user {
+  background: rgba(46, 204, 113, 0.25);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
