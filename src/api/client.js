@@ -260,5 +260,14 @@ export const reportsApi = {
   products: (params) => request(`/api/reports/products${qs(params)}`),
   status: (params) => request(`/api/reports/status${qs(params)}`),
   fulfillment: (params) => request(`/api/reports/fulfillment${qs(params)}`),
-  paymentSummary: (params) => request(`/api/reports/payment-summary${qs(params)}`)
+  paymentSummary: (params) => request(`/api/reports/payment-summary${qs(params)}`),
+  orderTrends: (params) => request(`/api/reports/order-trends${qs(params)}`),
+  communications: (params) => request(`/api/reports/communications${qs(params)}`)
+};
+
+// ---------------------------------------------------------------------
+// Inventario (Grupo 10, vía proxy del BFF en /api/inventory)
+// ---------------------------------------------------------------------
+export const inventoryApi = {
+  lowStock: (params) => request(`/api/inventory/low-stock${qs(params)}`)
 };
