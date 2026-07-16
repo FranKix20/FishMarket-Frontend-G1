@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ordersApi } from '../api/client';
+import { ordersApi, paymentsApi } from '../api/client';
 import ErrorBanner from '../components/ErrorBanner';
 import Tideline from '../components/Tideline';
-import { formatCLP, formatDate, statusLabel, statusPillClass } from '../utils/format';
+import { formatCLP, formatDate, statusLabel, statusPillClass, paymentStatusLabel, paymentStatusPillClass } from '../utils/format';
 
 // Secuencia conocida de estados que expone Grupo 5. Si el pedido está
 // CANCELLED u OUT_OF_STOCK se muestra un estado especial en vez del
@@ -39,6 +39,7 @@ function OrderTracker({ status }) {
 export default function OrderDetailPage() {
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
+  const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -52,6 +53,15 @@ export default function OrderDetailPage() {
       setError(err);
     } finally {
       setLoading(false);
+    }
+    // El estado del pago (Grupo 6) se consulta aparte y no bloquea la
+    // carga del pedido: si G6 no responde, se muestra el pedido igual
+    // y simplemente no aparece la sección de pago.
+    try {
+      const found = await paymentsApi.getByOrder(orderId);
+      setPayment(found);
+    } catch {
+      setPayment(null);
     }
   };
 
@@ -118,7 +128,7 @@ export default function OrderDetailPage() {
             <span>{formatCLP(order.totalAmount)}</span>
           </div>
 
-          {(order.shippingAddress || order.paymentMethod) && (
+          {(order.shippingAddress || order.paymentMethod || payment) && (
             <div className="detail-columns">
               {order.shippingAddress && (
                 <div>
@@ -132,10 +142,18 @@ export default function OrderDetailPage() {
                   </p>
                 </div>
               )}
-              {order.paymentMethod && (
+              {(order.paymentMethod || payment) && (
                 <div>
                   <h4>💳 Pago</h4>
-                  <p>{order.paymentMethod}</p>
+                  {order.paymentMethod && <p>{order.paymentMethod}</p>}
+                  {payment && (
+                    <p style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className={`pill ${paymentStatusPillClass(payment.status)}`}>
+                        {paymentStatusLabel(payment.status)}
+                      </span>
+                      {payment.amount != null && <span className="mono">{formatCLP(payment.amount)}</span>}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
