@@ -34,7 +34,7 @@ export default function ProductCard({ product, onAdd }) {
   };
 
   return (
-    <article className="card product-card">
+    <article className={`card product-card${outOfStock ? ' product-card--out-of-stock' : ''}`}>
       <Link to={`/productos/${product.id}`} className="product-card__image" tabIndex={-1}>
         {product.imageUrl ? (
           <img src={product.imageUrl} alt={product.name} loading="lazy" />

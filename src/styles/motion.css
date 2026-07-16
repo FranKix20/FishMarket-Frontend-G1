@@ -1,0 +1,170 @@
+/* ------------------------------------------------------------------ */
+/* Sistema de movimiento — keyframes y utilidades compartidas.        */
+/* Todo lo que se anima en el sitio (páginas, tarjetas, badges,       */
+/* botones) parte de aquí, para que el "lenguaje" de animación sea    */
+/* el mismo en cualquier pantalla, no efectos sueltos por archivo.    */
+/* ------------------------------------------------------------------ */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(217, 119, 6, 0);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -320px 0;
+  }
+  to {
+    background-position: 320px 0;
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes shake-x {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes collapse-out {
+  from {
+    opacity: 1;
+    max-height: 240px;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: scale(0.96);
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+  }
+}
+
+@keyframes spin-in {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+/* Toda página entra con un pequeño ascenso + fade — se aplica una sola
+   vez sobre .page, así que cubre el sitio entero sin tocar cada archivo. */
+.page {
+  animation: fade-in-up var(--duration-slow) var(--ease-smooth) both;
+}
+
+/* Utilidades reutilizables */
+.anim-pop {
+  animation: pop-in var(--duration-base) var(--ease-bounce) both;
+}
+.anim-float {
+  animation: float-y 2.6s var(--ease-in-out) infinite;
+}
+.anim-shake {
+  animation: shake-x var(--duration-slow) var(--ease-in-out) both;
+}
+.anim-bump {
+  animation: bump var(--duration-base) var(--ease-bounce) both;
+}
+
+/* Placeholder de carga tipo "esqueleto" con brillo animado */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page,
+  .anim-pop,
+  .anim-float,
+  .anim-shake,
+  .anim-bump,
+  .skeleton::after {
+    animation: none !important;
+  }
+}

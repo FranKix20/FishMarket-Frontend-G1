@@ -7,7 +7,6 @@ import ProductCard from '../components/ProductCard';
 import Pagination from '../components/Pagination';
 import CategoryPills from '../components/CategoryPills';
 import ErrorBanner from '../components/ErrorBanner';
-import Tideline from '../components/Tideline';
 import { formatCLP } from '../utils/format';
 
 const PAGE_SIZE = 12;
@@ -32,6 +31,7 @@ export default function CatalogPage() {
   const [maxPrice, setMaxPrice] = useState(100000);
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [sortBy, setSortBy] = useState('relevance');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const effectiveQuery = category || urlQuery;
 
@@ -89,8 +89,29 @@ export default function CatalogPage() {
 
         {error && <ErrorBanner error={error} onRetry={() => load(page, effectiveQuery)} />}
 
+        <button
+          type="button"
+          className="btn btn-secondary filters-toggle"
+          onClick={() => setFiltersOpen(true)}
+        >
+          ⚙️ Filtros
+        </button>
+
         <div className="catalog-layout">
-          <aside className="filters-panel">
+          <div
+            className={`filters-panel__backdrop${filtersOpen ? ' is-open' : ''}`}
+            onClick={() => setFiltersOpen(false)}
+            aria-hidden="true"
+          />
+          <aside className={`filters-panel${filtersOpen ? ' is-open' : ''}`}>
+            <button
+              type="button"
+              className="filters-panel__close"
+              onClick={() => setFiltersOpen(false)}
+              aria-label="Cerrar filtros"
+            >
+              ✕
+            </button>
             <h3>Filtros</h3>
 
             <div className="filters-panel__group">
@@ -134,6 +155,7 @@ export default function CatalogPage() {
                 setMaxPrice(100000);
                 setOnlyInStock(false);
                 setSortBy('relevance');
+                setFiltersOpen(false);
               }}
             >
               Limpiar filtros
@@ -150,8 +172,17 @@ export default function CatalogPage() {
             </div>
 
             {loading ? (
-              <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                <Tideline loading />
+              <div className="product-grid">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div className="card product-card-skeleton" key={i}>
+                    <div className="skeleton product-card-skeleton__image" />
+                    <div className="product-card-skeleton__body">
+                      <div className="skeleton product-card-skeleton__line" style={{ width: '80%' }} />
+                      <div className="skeleton product-card-skeleton__line" style={{ width: '55%' }} />
+                      <div className="skeleton product-card-skeleton__line" style={{ width: '40%', height: 22, marginTop: 8 }} />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : visibleProducts.length === 0 ? (
               <div className="empty-state card">
