@@ -51,6 +51,8 @@ export default function OrderDetailPage() {
   const [error, setError] = useState(null);
   const [lastChecked, setLastChecked] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState(null);
   const intervalRef = useRef(null);
 
   const load = useCallback(
@@ -98,6 +100,28 @@ export default function OrderDetailPage() {
     }
     return () => clearInterval(intervalRef.current);
   }, [order, payment, load]);
+
+  // El pago (Grupo 6) puede quedar en PENDING (usuario cerró Mercado Pago
+  // a mitad de camino) o REJECTED (tarjeta rechazada). En ambos casos el
+  // pedido se queda pegado en STOCK_RESERVED del lado de G5 porque nunca
+  // llega la aprobación — la salida es generar un intento de pago nuevo,
+  // no reintentar el mismo (G6 ya lo cerró como intento fallido/expirado).
+  const handleRetryPayment = async () => {
+    setRetrying(true);
+    setRetryError(null);
+    try {
+      const result = await paymentsApi.retry(order.id, order.totalAmount);
+      if (result?.initPoint) {
+        window.location.href = result.initPoint;
+        return;
+      }
+      setRetryError('El servicio de pagos no devolvió un link de pago. Intenta de nuevo en unos minutos.');
+    } catch (err) {
+      setRetryError(err?.message || 'No se pudo generar un nuevo intento de pago.');
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   return (
     <div className="page container">
@@ -193,6 +217,23 @@ export default function OrderDetailPage() {
                       </span>
                       {payment.amount != null && <span className="mono">{formatCLP(payment.amount)}</span>}
                     </p>
+                  )}
+                  {payment && ['PENDING', 'REJECTED'].includes(payment.status) && (
+                    <div style={{ marginTop: 10 }}>
+                      <button type="button" className="btn btn-primary btn-sm" onClick={handleRetryPayment} disabled={retrying}>
+                        {retrying ? 'Generando link…' : 'Reintentar pago'}
+                      </button>
+                      <p style={{ fontSize: 12, color: 'var(--color-text-faint)', marginTop: 6 }}>
+                        {payment.status === 'PENDING'
+                          ? 'El pago quedó sin completarse. Genera un nuevo link para terminarlo.'
+                          : 'El pago fue rechazado. Puedes intentarlo de nuevo.'}
+                      </p>
+                      {retryError && (
+                        <p style={{ fontSize: 12.5, color: '#b3261e', marginTop: 4 }} role="alert">
+                          {retryError}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
