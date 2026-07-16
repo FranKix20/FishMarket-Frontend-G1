@@ -438,10 +438,15 @@
 }
 
 /* Responsividad para móviles */
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .chat-widget {
     right: 12px;
     bottom: 12px;
+  }
+  .chat-widget__toggle {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
   }
   .chat-widget__panel {
     width: calc(100vw - 24px);
