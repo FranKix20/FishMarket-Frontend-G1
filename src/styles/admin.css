@@ -7,6 +7,12 @@
   padding-bottom: var(--space-8);
 }
 
+@media (max-width: 640px) {
+  .admin {
+    padding-bottom: 104px;
+  }
+}
+
 .admin-head {
   display: flex;
   justify-content: space-between;
