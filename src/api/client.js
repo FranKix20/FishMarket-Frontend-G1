@@ -220,3 +220,18 @@ export const chatApi = {
   }
 };
 
+// ---------------------------------------------------------------------
+// Reportería (Grupo 10, vía proxy del BFF en /api/reports)
+// ---------------------------------------------------------------------
+const qs = (params = {}) => {
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '');
+  return entries.length ? `?${new URLSearchParams(entries).toString()}` : '';
+};
+
+export const reportsApi = {
+  salesSummary: (params) => request(`/api/reports/sales-summary${qs(params)}`),
+  products: (params) => request(`/api/reports/products${qs(params)}`),
+  status: (params) => request(`/api/reports/status${qs(params)}`),
+  fulfillment: (params) => request(`/api/reports/fulfillment${qs(params)}`),
+  paymentSummary: (params) => request(`/api/reports/payment-summary${qs(params)}`)
+};
