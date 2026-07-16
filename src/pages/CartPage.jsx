@@ -1,18 +1,26 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import ErrorBanner from '../components/ErrorBanner';
 import Tideline from '../components/Tideline';
+import ProductCard from '../components/ProductCard';
+import { productsApi } from '../api/client';
 import { formatCLP } from '../utils/format';
 
 const FREE_SHIPPING_THRESHOLD = 50000;
 const SHIPPING_COST = 3000;
+const REMOVE_ANIM_MS = 260;
 
 export default function CartPage() {
   const { cart, loading, error, addItem, removeItem, refresh } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [busyId, setBusyId] = useState(null);
   const [itemErrors, setItemErrors] = useState({});
+  const [removingId, setRemovingId] = useState(null);
+  const [bumpId, setBumpId] = useState(null);
+  const [recommended, setRecommended] = useState([]);
 
   const items = cart?.items || [];
   const subtotal = cart?.totalAmount ?? items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
@@ -21,13 +29,20 @@ export default function CartPage() {
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const progressPct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
+  // Se muestra la tarjeta "colapsándose" (fade + altura a 0) durante
+  // REMOVE_ANIM_MS antes de sacarla de verdad del carrito, para que la
+  // salida se sienta intencional y no un salto brusco de contenido.
   const handleRemove = async (productId) => {
+    setRemovingId(productId);
     setBusyId(productId);
-    try {
-      await removeItem(productId);
-    } finally {
-      setBusyId(null);
-    }
+    setTimeout(async () => {
+      try {
+        await removeItem(productId);
+      } finally {
+        setBusyId(null);
+        setRemovingId(null);
+      }
+    }, REMOVE_ANIM_MS);
   };
 
   const handleAddOne = async (productId) => {
@@ -35,6 +50,8 @@ export default function CartPage() {
     setItemErrors((prev) => ({ ...prev, [productId]: null }));
     try {
       await addItem(productId, 1);
+      setBumpId(productId);
+      setTimeout(() => setBumpId(null), 260);
     } catch (err) {
       setItemErrors((prev) => ({
         ...prev,
@@ -45,8 +62,37 @@ export default function CartPage() {
     }
   };
 
+  const handleAddRecommended = async (productId, quantity) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    await addItem(productId, quantity);
+  };
+
+  // Recomendaciones simples: se toma la primera página del catálogo y se
+  // excluyen los productos que ya están en el carrito, para que la
+  // página no se sienta vacía cuando llevas solo 1-2 productos.
+  useEffect(() => {
+    let cancelled = false;
+    productsApi
+      .list(1, 8)
+      .then(({ data }) => {
+        if (cancelled) return;
+        const cartIds = new Set(items.map((it) => it.productId));
+        setRecommended((data?.data || []).filter((p) => !cartIds.has(p.id)).slice(0, 4));
+      })
+      .catch(() => {
+        if (!cancelled) setRecommended([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart?.items?.length]);
+
   return (
-    <div className="page container">
+    <div className={`page container${items.length > 0 ? ' page--has-mobile-bar' : ''}`}>
       <div className="page-header">
         <h1>Mi carrito</h1>
         <p>Revisa lo que llevas antes de continuar al pago.</p>
@@ -71,7 +117,10 @@ export default function CartPage() {
           <div>
             <div className="card">
               {items.map((item) => (
-                <div className="cart-item" key={item.id || item.productId}>
+                <div
+                  className={`cart-item${removingId === item.productId ? ' cart-item--removing' : ''}`}
+                  key={item.id || item.productId}
+                >
                   <div className="cart-item__main">
                     <div className="cart-item__thumb">
                       {item.productImage ? (
@@ -101,7 +150,7 @@ export default function CartPage() {
                       >
                         +
                       </button>
-                      <span>{item.quantity}</span>
+                      <span className={bumpId === item.productId ? 'qty-bump' : ''}>{item.quantity}</span>
                     </div>
 
                     <span className="cart-item__price">{formatCLP(item.subtotal)}</span>
@@ -169,6 +218,30 @@ export default function CartPage() {
             >
               Ir a pagar
             </button>
+          </div>
+
+          {/* Barra fija inferior en mobile: total + "Ir a pagar" quedan
+              siempre visibles sin depender del scroll (se oculta sola en
+              desktop vía CSS). */}
+          <div className="cart-summary__mobile-bar">
+            <div>
+              <span>Total</span>
+              <strong>{formatCLP(total)}</strong>
+            </div>
+            <button type="button" className="btn btn-primary" onClick={() => navigate('/checkout')}>
+              Ir a pagar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!loading && items.length > 0 && recommended.length > 0 && (
+        <div className="cart-recommend">
+          <h2>También te puede interesar</h2>
+          <div className="product-grid">
+            {recommended.map((product) => (
+              <ProductCard key={product.id} product={product} onAdd={handleAddRecommended} />
+            ))}
           </div>
         </div>
       )}

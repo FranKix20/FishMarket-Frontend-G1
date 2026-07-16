@@ -9,6 +9,14 @@ import Tideline from '../components/Tideline';
 const MIN_PASSWORD = 8;
 
 const STATUS_LABEL = { active: 'Activa', disabled: 'Deshabilitada' };
+const ROLE_LABEL = { admin: 'Administrador', customer: 'Cliente' };
+const ROLE_PILL = { admin: 'pill-warning', customer: 'pill-link' };
+
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?';
+}
 
 export default function AccountPage() {
   const { updateUser, logout } = useAuth();
@@ -105,102 +113,118 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="container" style={{ paddingTop: 88, paddingBottom: 64, maxWidth: 720 }}>
-      <h1 style={{ fontSize: 24, marginBottom: 4 }}>Mi cuenta</h1>
-      <p style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--space-6)' }}>
-        Gestiona los datos de tu perfil.
-      </p>
+    <div className="page container" style={{ maxWidth: 1080 }}>
+      <div className="page-header">
+        <h1>Mi cuenta</h1>
+        <p>Gestiona los datos de tu perfil.</p>
+      </div>
 
-      {/* Datos del perfil */}
-      <div className="card panel" style={{ marginBottom: 'var(--space-5)' }}>
-        <h2 style={{ fontSize: 17, marginBottom: 'var(--space-4)' }}>Datos de la cuenta</h2>
-        <dl style={{ display: 'grid', gap: 'var(--space-3)', margin: 0 }}>
-          {[
-            ['Nombre', profile.full_name || '—'],
-            ['Correo', profile.email],
-            ['ID de cliente', profile.business_user_id || '—'],
-            ['Rol', profile.role],
-            ['Estado', STATUS_LABEL[profile.status] || profile.status],
-            ['Correo verificado', profile.email_verified ? 'Sí' : 'No']
-          ].map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: 14 }}>
-              <dt style={{ color: 'var(--color-text-muted)' }}>{label}</dt>
-              <dd style={{ margin: 0, fontWeight: 600, textAlign: 'right', wordBreak: 'break-word' }}>{value}</dd>
+      <div className="account-layout">
+        <div className="card account-sidebar">
+          <div className="account-avatar">{initials(profile.full_name)}</div>
+          <div>
+            <h2 className="account-sidebar__name">{profile.full_name || '—'}</h2>
+            <p className="account-sidebar__email">{profile.email}</p>
+            <div className="account-sidebar__badges">
+              <span className={`pill ${ROLE_PILL[profile.role] || 'pill-neutral'}`}>
+                {ROLE_LABEL[profile.role] || profile.role}
+              </span>
+              <span className={`pill ${profile.status === 'active' ? 'pill-success' : 'pill-danger'}`}>
+                {STATUS_LABEL[profile.status] || profile.status}
+              </span>
             </div>
-          ))}
-        </dl>
-      </div>
+          </div>
+        </div>
 
-      {/* Editar nombre */}
-      <div className="card panel" style={{ marginBottom: 'var(--space-5)' }}>
-        <h2 style={{ fontSize: 17, marginBottom: 'var(--space-4)' }}>Editar perfil</h2>
-        {nameError && <ErrorBanner error={nameError} />}
-        {nameOk && (
-          <div className="banner banner-success" role="status">
-            <p>Nombre actualizado.</p>
+        <div className="account-main">
+          {/* Datos del perfil */}
+          <div className="card panel">
+            <h2 style={{ fontSize: 17, marginBottom: 'var(--space-4)' }}>Datos de la cuenta</h2>
+            <dl className="account-data-grid">
+              {[
+                ['ID de cliente', profile.business_user_id || '—'],
+                ['Correo verificado', profile.email_verified ? 'Sí ✓' : 'No']
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
-        )}
-        <form onSubmit={handleSaveName}>
-          <div className="field">
-            <label htmlFor="fullName">Nombre completo</label>
-            <input
-              id="fullName"
-              type="text"
-              autoComplete="name"
-              required
-              value={fullName}
-              onChange={(e) => {
-                setFullName(e.target.value);
-                setNameOk(false);
-              }}
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={savingName || !fullName.trim() || fullName.trim() === profile.full_name}
-          >
-            {savingName ? 'Guardando…' : 'Guardar cambios'}
-          </button>
-        </form>
-      </div>
 
-      {/* Cambiar contraseña */}
-      <div className="card panel">
-        <h2 style={{ fontSize: 17, marginBottom: 'var(--space-4)' }}>Cambiar contraseña</h2>
-        {pwError && <ErrorBanner error={pwError} />}
-        <form onSubmit={handleChangePassword}>
-          <div className="field">
-            <label htmlFor="currentPassword">Contraseña actual</label>
-            <input
-              id="currentPassword"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
+          {/* Editar nombre */}
+          <div className="card panel">
+            <h2 style={{ fontSize: 17, marginBottom: 'var(--space-4)' }}>Editar perfil</h2>
+            {nameError && <ErrorBanner error={nameError} />}
+            {nameOk && (
+              <div className="banner banner-success" role="status">
+                <p>Nombre actualizado.</p>
+              </div>
+            )}
+            <form onSubmit={handleSaveName}>
+              <div className="field">
+                <label htmlFor="fullName">Nombre completo</label>
+                <input
+                  id="fullName"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    setNameOk(false);
+                  }}
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={savingName || !fullName.trim() || fullName.trim() === profile.full_name}
+              >
+                {savingName ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+            </form>
           </div>
-          <div className="field">
-            <label htmlFor="newPassword">Nueva contraseña</label>
-            <input
-              id="newPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={MIN_PASSWORD}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
-            />
+
+          {/* Cambiar contraseña */}
+          <div className="card panel">
+            <h2 style={{ fontSize: 17, marginBottom: 'var(--space-4)' }}>Cambiar contraseña</h2>
+            {pwError && <ErrorBanner error={pwError} />}
+            <form onSubmit={handleChangePassword}>
+              <div className="field">
+                <label htmlFor="currentPassword">Contraseña actual</label>
+                <input
+                  id="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="newPassword">Nueva contraseña</label>
+                <input
+                  id="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={MIN_PASSWORD}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mínimo 8 caracteres"
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={changingPw}>
+                {changingPw ? 'Cambiando…' : 'Cambiar contraseña'}
+              </button>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: 13, marginTop: 'var(--space-3)' }}>
+                Por seguridad, al cambiarla se cerrará la sesión y deberás iniciar sesión de nuevo.
+              </p>
+            </form>
           </div>
-          <button type="submit" className="btn btn-primary" disabled={changingPw}>
-            {changingPw ? 'Cambiando…' : 'Cambiar contraseña'}
-          </button>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: 13, marginTop: 'var(--space-3)' }}>
-            Por seguridad, al cambiarla se cerrará la sesión y deberás iniciar sesión de nuevo.
-          </p>
-        </form>
+        </div>
       </div>
     </div>
   );

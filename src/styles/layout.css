@@ -350,6 +350,16 @@
   }
 }
 
+.filters-toggle {
+  display: none;
+}
+@media (max-width: 860px) {
+  .filters-toggle {
+    display: inline-flex;
+    margin-bottom: var(--space-4);
+  }
+}
+
 .filters-panel {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -359,8 +369,63 @@
   top: 88px;
 }
 @media (max-width: 860px) {
+  /* En mobile/tablet, el panel se convierte en un drawer que se desliza
+     desde la izquierda en vez de competir por espacio horizontal con el
+     grid de productos. */
   .filters-panel {
-    position: static;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 84vw);
+    z-index: 1000;
+    border-radius: 0;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform var(--duration-slow) var(--ease-smooth);
+    box-shadow: var(--shadow-raised);
+  }
+  .filters-panel.is-open {
+    transform: translateX(0);
+  }
+}
+
+.filters-panel__backdrop {
+  display: none;
+}
+@media (max-width: 860px) {
+  .filters-panel__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 26, 63, 0.45);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-base) var(--ease-smooth);
+  }
+  .filters-panel__backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.filters-panel__close {
+  display: none;
+}
+@media (max-width: 860px) {
+  .filters-panel__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    margin-bottom: var(--space-3);
+    border-radius: 999px;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+    font-size: 16px;
   }
 }
 .filters-panel h3 {
@@ -430,11 +495,24 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: box-shadow var(--duration-base) var(--ease-smooth), transform var(--duration-base) var(--ease-bounce);
 }
 .product-card:hover {
   box-shadow: var(--shadow-raised);
-  transform: translateY(-2px);
+  transform: translateY(-5px) scale(1.015);
+}
+.product-card--out-of-stock {
+  transform: none !important;
+}
+.product-card--out-of-stock:hover {
+  box-shadow: var(--shadow-card);
+  transform: none !important;
+}
+.product-card--out-of-stock .product-card__image img {
+  filter: grayscale(0.75) opacity(0.65);
+}
+.product-card--out-of-stock:hover .product-card__image img {
+  transform: none;
 }
 .product-card__image {
   position: relative;
@@ -447,6 +525,10 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform var(--duration-slow) var(--ease-smooth);
+}
+.product-card:hover .product-card__image img {
+  transform: scale(1.08);
 }
 .product-card__image-fallback {
   width: 100%;
@@ -535,6 +617,149 @@
   width: 30px;
   text-align: center;
   font-size: 13.5px;
+}
+
+.product-card-skeleton {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.product-card-skeleton__image {
+  aspect-ratio: 4 / 3;
+  border-radius: 0;
+}
+.product-card-skeleton__body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.product-card-skeleton__line {
+  height: 12px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Mi cuenta                                                          */
+/* ---------------------------------------------------------------- */
+.account-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.account-sidebar {
+  position: sticky;
+  top: 88px;
+  text-align: center;
+  padding: var(--space-6) var(--space-5);
+}
+@media (max-width: 860px) {
+  .account-sidebar {
+    position: static;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-5);
+  }
+}
+
+.account-avatar {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto var(--space-4);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-navy), var(--color-navy-raised));
+  color: var(--color-text-on-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  flex-shrink: 0;
+  animation: pop-in var(--duration-slow) var(--ease-bounce) both;
+}
+@media (max-width: 860px) {
+  .account-avatar {
+    margin: 0;
+    width: 60px;
+    height: 60px;
+    font-size: 20px;
+  }
+}
+
+.account-sidebar__name {
+  font-size: 17px;
+  margin-bottom: 2px;
+}
+.account-sidebar__email {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  word-break: break-word;
+  margin-bottom: var(--space-4);
+}
+@media (max-width: 860px) {
+  .account-sidebar__email {
+    margin-bottom: 0;
+  }
+}
+
+.account-sidebar__badges {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+@media (max-width: 860px) {
+  .account-sidebar__badges {
+    justify-content: flex-start;
+  }
+}
+
+.account-main {
+  display: grid;
+  gap: var(--space-5);
+}
+@media (min-width: 1024px) {
+  .account-main {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  /* La primera tarjeta ("Datos de la cuenta") ocupa todo el ancho para
+     que la grilla de datos respire; las de edición van lado a lado. */
+  .account-main > .card:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.account-data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-6);
+}
+@media (max-width: 480px) {
+  .account-data-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.account-data-grid dt {
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.account-data-grid dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  font-size: 14.5px;
 }
 
 /* ---------------------------------------------------------------- */
@@ -696,9 +921,14 @@
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--color-border);
+  animation: fade-in-up var(--duration-base) var(--ease-smooth) both;
 }
 .cart-item:last-child {
   border-bottom: none;
+}
+.cart-item--removing {
+  animation: collapse-out var(--duration-base) var(--ease-smooth) both;
+  overflow: hidden;
 }
 .cart-item__main {
   display: flex;
@@ -784,6 +1014,73 @@
   .cart-summary {
     position: static;
   }
+}
+/* En mobile, el resumen deja de competir con el scroll: el total y el
+   botón de pagar quedan siempre visibles en una barra inferior fija,
+   patrón estándar de checkout mobile en e-commerce. */
+@media (max-width: 640px) {
+  .cart-summary {
+    padding-bottom: calc(var(--space-5) + 84px);
+  }
+  .cart-summary__mobile-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -6px 20px rgba(16, 26, 51, 0.1);
+    padding: var(--space-3) var(--space-4);
+    /* El botón flotante de chat vive fijo en la esquina inferior derecha
+       (56px + 24px de margen) — se reserva ese espacio para que el botón
+       "Ir a pagar" nunca quede tapado detrás de él. */
+    padding-right: 96px;
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    animation: fade-in-up var(--duration-base) var(--ease-smooth) both;
+  }
+  .cart-summary__mobile-bar strong {
+    display: block;
+    font-size: 17px;
+  }
+  .cart-summary__mobile-bar span {
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+  }
+  .cart-summary__mobile-bar .btn {
+    flex-shrink: 0;
+  }
+}
+@media (min-width: 641px) {
+  .cart-summary__mobile-bar {
+    display: none;
+  }
+}
+
+.qty-bump {
+  display: inline-block;
+  animation: bump var(--duration-base) var(--ease-bounce) both;
+}
+
+@media (max-width: 640px) {
+  .page--has-mobile-bar {
+    padding-bottom: 148px;
+  }
+}
+
+.cart-recommend {
+  margin-top: var(--space-7);
+}
+.cart-recommend h2 {
+  font-size: 18px;
+  margin-bottom: var(--space-4);
+}
+.cart-recommend .product-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
 .cart-summary h2 {
   font-size: 17px;
