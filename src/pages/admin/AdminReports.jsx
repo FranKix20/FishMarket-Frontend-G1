@@ -19,8 +19,7 @@ export default function AdminReports() {
               El dashboard de reportería vive en un panel aparte, mantenido por Grupo 10.
               Se abre en una pestaña nueva con tu sesión de administrador.
             </p>
-            
-              href={reportsUrl}
+            <a href={reportsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary"
