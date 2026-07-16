@@ -12,17 +12,22 @@ export default function ProductCard({ product, onAdd }) {
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [addError, setAddError] = useState(null);
 
   const outOfStock = product.stockVisible === 0;
+  const atStockLimit = typeof product.stockVisible === 'number' && quantity >= product.stockVisible;
   const badge = stockBadge(product.stockVisible);
 
   const handleAdd = async () => {
     setAdding(true);
     setJustAdded(false);
+    setAddError(null);
     try {
       await onAdd(product.id, quantity);
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 1800);
+    } catch (err) {
+      setAddError(err?.message || 'No se pudo agregar al carrito.');
     } finally {
       setAdding(false);
     }
@@ -64,8 +69,8 @@ export default function ProductCard({ product, onAdd }) {
               <button
                 type="button"
                 aria-label="Sumar unidad"
-                onClick={() => setQuantity((q) => q + 1)}
-                disabled={outOfStock}
+                onClick={() => setQuantity((q) => (typeof product.stockVisible === 'number' ? Math.min(product.stockVisible, q + 1) : q + 1))}
+                disabled={outOfStock || atStockLimit}
               >
                 +
               </button>
@@ -78,6 +83,11 @@ export default function ProductCard({ product, onAdd }) {
             >
               {adding ? 'Agregando…' : justAdded ? 'Agregado ✓' : outOfStock ? 'Sin stock' : 'Agregar al carrito'}
             </button>
+            {addError && (
+              <p className="product-card__error" role="alert">
+                {addError}
+              </p>
+            )}
           </div>
         </div>
       </div>

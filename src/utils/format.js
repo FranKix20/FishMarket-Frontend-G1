@@ -45,3 +45,26 @@ export function statusLabel(status) {
   };
   return map[status] || status || 'Desconocido';
 }
+
+// Estados del servicio de Pagos (Grupo 6): PENDING / APPROVED / REJECTED.
+// UNAVAILABLE es propio del BFF: significa que el pago no se pudo
+// sincronizar con G6 (servicio caído), no un estado real del pago.
+export function paymentStatusPillClass(status) {
+  const map = {
+    PENDING: 'pill-warning',
+    APPROVED: 'pill-success',
+    REJECTED: 'pill-danger',
+    UNAVAILABLE: 'pill-neutral'
+  };
+  return map[status] || 'pill-neutral';
+}
+
+export function paymentStatusLabel(status) {
+  const map = {
+    PENDING: 'Pendiente',
+    APPROVED: 'Aprobado',
+    REJECTED: 'Rechazado',
+    UNAVAILABLE: 'Por confirmar'
+  };
+  return map[status] || status || 'Desconocido';
+}

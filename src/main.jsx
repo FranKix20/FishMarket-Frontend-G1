@@ -5,6 +5,7 @@ import App from './App.jsx';
 import './styles/global.css';
 import './styles/layout.css';
 import './styles/chat.css';
+import './styles/admin.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
