@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { chatApi, uuid } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -54,11 +55,16 @@ function formatMarkdown(text) {
 
 export default function ChatWidget() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [view, setView] = useState('chat'); // 'chat' | 'settings'
   const [sessionId] = useState(() => uuid());
   const [messages, setMessages] = useState([
-    { from: 'bot', text: '¡Hola! Soy el asistente de FishMarket Cloud. Pregúntame por envíos, pagos o tu pedido.' }
+    {
+      from: 'bot',
+      text: '¡Hola! Soy el asistente de FishMarket Cloud. Pregúntame por envíos, pagos o tu pedido.',
+      isWelcome: true
+    }
   ]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -70,6 +76,22 @@ export default function ChatWidget() {
   // Estados para Health/Conexiones
   const [health, setHealth] = useState(null);
   const [loadingHealth, setLoadingHealth] = useState(false);
+
+  // Actualización dinámica del mensaje de bienvenida al iniciar/cerrar sesión
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].isWelcome) {
+        return [{
+          from: 'bot',
+          text: user
+            ? `¡Hola, **${user.fullName || user.full_name || 'usuario'}**! 👋 Soy el asistente de FishMarket Cloud. ¿En qué puedo ayudarte hoy con tus pedidos o productos?`
+            : '¡Hola! Soy el asistente de FishMarket Cloud. Pregúntame por envíos, pagos o tu pedido.',
+          isWelcome: true
+        }];
+      }
+      return prev;
+    });
+  }, [user]);
 
   const fetchHealth = async () => {
     setLoadingHealth(true);
@@ -99,7 +121,6 @@ export default function ChatWidget() {
       const res = await chatApi.faq(category);
       setFaqQuestions(res.data.items || []);
     } catch {
-      // Si falla, no mostramos preguntas falsas (JSON fake) y avisamos que aún no está conectado al backend
       setMessages((m) => [
         ...m,
         { from: 'bot', text: 'El servicio de preguntas frecuentes no está disponible en este momento porque el chatbot aún no se conecta al backend.' }
@@ -134,11 +155,22 @@ export default function ChatWidget() {
       const { data } = await chatApi.send(sessionId, text, user?.business_user_id);
       const metaText = `Intent: ${data.intent_detected || 'lógica interna'} · Fuentes: ${(data.sources_consulted || []).join(', ') || 'lógica interna'}`;
       setMessages((m) => [...m, { from: 'bot', text: data.response, meta: metaText }]);
-    } catch {
-      setMessages((m) => [
-        ...m,
-        { from: 'bot', text: 'No pude conectarme con el asistente en este momento. Intenta de nuevo en un momento.' }
-      ]);
+    } catch (err) {
+      if (err.status === 401 || err.code === 'UNAUTHORIZED') {
+        setMessages((m) => [
+          ...m,
+          { 
+            from: 'bot', 
+            text: '🔒 **Acceso Protegido**\n\nNo has iniciado sesión o tu sesión ha expirado. Por favor, inicia sesión con tu cuenta para que pueda ayudarte con la información de tus pedidos.',
+            authRequired: true 
+          }
+        ]);
+      } else {
+        setMessages((m) => [
+          ...m,
+          { from: 'bot', text: 'No pude conectarme con el asistente en este momento. Intenta de nuevo en un momento.' }
+        ]);
+      }
     } finally {
       setSending(false);
     }
@@ -159,7 +191,14 @@ export default function ChatWidget() {
       {open && (
         <div className="chat-widget__panel">
           <div className="chat-widget__header">
-            <span>Asistente FishMarket</span>
+            <div className="chat-widget__header-title-wrap">
+              <span className="chat-widget__header-title">Asistente FishMarket</span>
+              {user && (
+                <span className="chat-widget__session-badge chat-widget__session-badge--user">
+                  👤 {user.fullName || user.full_name || 'Miembro'}
+                </span>
+              )}
+            </div>
             <div className="chat-widget__header-actions">
               <button 
                 type="button" 
@@ -201,6 +240,29 @@ export default function ChatWidget() {
                         {m.meta && (
                           <div className="chat-widget__msg-meta">
                             {m.meta}
+                          </div>
+                        )}
+                        {m.authRequired && (
+                          <div className="chat-widget__auth-card">
+                            <div className="chat-widget__auth-card-title">
+                              <span className="chat-widget__auth-card-icon">🔒</span>
+                              Inicio de Sesión Requerido
+                            </div>
+                            <p className="chat-widget__auth-card-text">
+                              Para consultar tus pedidos, envíos o notificaciones personales, necesitas ingresar a tu cuenta de FishMarket.
+                            </p>
+                            <div className="chat-widget__auth-card-actions">
+                              <button 
+                                type="button" 
+                                className="chat-widget__auth-btn chat-widget__auth-btn--primary"
+                                onClick={() => {
+                                  setOpen(false);
+                                  navigate('/login');
+                                }}
+                              >
+                                Iniciar Sesión
+                              </button>
+                            </div>
                           </div>
                         )}
                         {idx === 0 && !selectedFaqCategory && (
