@@ -106,7 +106,8 @@ export default function AdminReports() {
             <div className="card admin-report-panel">
               <h2 className="admin-report-panel__title">Pedidos por estado</h2>
               {status?.statusBreakdown?.length ? (
-                <table className="admin-table">
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
                   <thead>
                     <tr>
                       <th>Estado</th>
@@ -128,6 +129,7 @@ export default function AdminReports() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               ) : (
                 <p className="admin-muted">Sin datos.</p>
               )}
@@ -136,7 +138,8 @@ export default function AdminReports() {
             <div className="card admin-report-panel">
               <h2 className="admin-report-panel__title">Productos más vendidos</h2>
               {products?.topProducts?.length ? (
-                <table className="admin-table">
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
                   <thead>
                     <tr>
                       <th>Producto</th>
@@ -159,6 +162,7 @@ export default function AdminReports() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               ) : (
                 <p className="admin-muted">Sin datos.</p>
               )}
@@ -167,7 +171,8 @@ export default function AdminReports() {
             <div className="card admin-report-panel">
               <h2 className="admin-report-panel__title">Envíos por región</h2>
               {fulfillment?.byRegion?.length ? (
-                <table className="admin-table">
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
                   <thead>
                     <tr>
                       <th>Región</th>
@@ -185,6 +190,7 @@ export default function AdminReports() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               ) : (
                 <p className="admin-muted">Sin datos.</p>
               )}
@@ -193,7 +199,8 @@ export default function AdminReports() {
             <div className="card admin-report-panel">
               <h2 className="admin-report-panel__title">Métodos de pago</h2>
               {payments?.byMethod?.length ? (
-                <table className="admin-table">
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
                   <thead>
                     <tr>
                       <th>Método</th>
@@ -211,6 +218,7 @@ export default function AdminReports() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               ) : (
                 <p className="admin-muted">Sin datos.</p>
               )}
