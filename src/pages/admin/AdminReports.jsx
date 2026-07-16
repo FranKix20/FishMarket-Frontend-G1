@@ -25,7 +25,7 @@ export default function AdminReports() {
               rel="noopener noreferrer"
               className="btn btn-primary"
             >
-              Abrir dashboard de reportería ↗
+              Abrir dashboard de reportería (nueva pestaña)
             </a>
           </>
         ) : (
