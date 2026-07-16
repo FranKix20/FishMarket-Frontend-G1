@@ -201,7 +201,6 @@ export const chatApi = {
   send: (sessionId, message, userId) =>
     request('/api/chat', {
       method: 'POST',
-      auth: false,
       body: { sessionId, message, userId: userId ?? null }
     }),
 
