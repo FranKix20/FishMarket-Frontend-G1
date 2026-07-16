@@ -227,6 +227,10 @@ export const paymentsApi = {
     const { data } = await request(`/api/payments?orderId=${encodeURIComponent(orderId)}`);
     const list = Array.isArray(data) ? data : data?.data || [];
     return list[0] || null;
+  },
+  getById: async (paymentId) => {
+    const { data } = await request(`/api/payments/${encodeURIComponent(paymentId)}`);
+    return data;
   }
 };
 
