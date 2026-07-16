@@ -24,6 +24,7 @@ import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import NotificationsPage from './pages/NotificationsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import PaymentReturnPage from './pages/PaymentReturnPage';
 
 function Layout({ children }) {
   return (
@@ -106,6 +107,9 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/pago/exito" element={<PaymentReturnPage outcome="success" />} />
+      <Route path="/pago/rechazo" element={<PaymentReturnPage outcome="failure" />} />
+      <Route path="/pago/pendiente" element={<PaymentReturnPage outcome="pending" />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
