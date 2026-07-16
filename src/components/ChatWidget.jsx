@@ -10,7 +10,8 @@ const dependenciesMap = {
   payment_service: 'Pagos (G6)',
   inventory_service: 'Inventario (G7)',
   shipment_service: 'Envíos (G8)',
-  notification_service: 'Notificaciones (G9)'
+  notification_service: 'Notificaciones (G9)',
+  reporting_service: 'Supervisor (G10)'
 };
 
 const faqCategoryNames = {
