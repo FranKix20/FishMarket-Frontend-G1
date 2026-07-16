@@ -54,6 +54,7 @@ function formatMarkdown(text) {
 
 export default function ChatWidget() {
   const { user } = useAuth();
+  const userInitial = user ? (user.fullName || user.full_name || 'U').charAt(0).toUpperCase() : 'U';
   const [open, setOpen] = useState(false);
   const [view, setView] = useState('chat'); // 'chat' | 'settings'
   const [sessionId] = useState(() => uuid());
@@ -189,7 +190,12 @@ export default function ChatWidget() {
       {open && (
         <div className="chat-widget__panel">
           <div className="chat-widget__header">
-            <span>Asistente FishMarket</span>
+            <div className="chat-widget__header-title-wrap">
+              <span className="chat-widget__header-title">Asistente FishMarket</span>
+              <span className={`chat-widget__session-badge chat-widget__session-badge--${user ? 'user' : 'guest'}`}>
+                {user ? `👤 ${user.fullName || user.full_name || 'Miembro'}` : '🔑 Invitado'}
+              </span>
+            </div>
             <div className="chat-widget__header-actions">
               <button 
                 type="button" 
@@ -221,7 +227,7 @@ export default function ChatWidget() {
                       className={`chat-widget__msg-row chat-widget__msg-row--${m.from}`}
                     >
                       <div className="chat-widget__avatar">
-                        {m.from === 'bot' ? '◆' : 'U'}
+                        {m.from === 'bot' ? '◆' : userInitial}
                       </div>
                       <div className="chat-widget__bubble-wrap">
                         <div 
