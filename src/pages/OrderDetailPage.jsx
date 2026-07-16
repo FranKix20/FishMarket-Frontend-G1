@@ -95,9 +95,18 @@ export default function OrderDetailPage() {
             <div className="order-detail__items">
               {order.items.map((item, idx) => (
                 <div className="order-detail__item-row" key={item.id || idx}>
-                  <span>
-                    {item.productName || item.productId} × {item.quantity}
-                  </span>
+                  <div className="order-detail__item-info">
+                    <div className="order-detail__item-thumb">
+                      {item.productImage ? (
+                        <img src={item.productImage} alt={item.productName || ''} loading="lazy" />
+                      ) : (
+                        <span aria-hidden="true">🎣</span>
+                      )}
+                    </div>
+                    <span>
+                      {item.productName || item.productId} × {item.quantity}
+                    </span>
+                  </div>
                   <span className="mono">{formatCLP(item.subtotal)}</span>
                 </div>
               ))}
