@@ -231,6 +231,19 @@ export const paymentsApi = {
   getById: async (paymentId) => {
     const { data } = await request(`/api/payments/${encodeURIComponent(paymentId)}`);
     return data;
+  },
+  // Crea un NUEVO intento de pago para un pedido que quedó con el pago
+  // pendiente o rechazado (el usuario cerró Mercado Pago a mitad de
+  // camino, la tarjeta fue rechazada, etc.). Es el mismo endpoint que usa
+  // el checkout original — G6 devuelve un initPoint nuevo al que hay que
+  // redirigir para que el usuario complete el pago de verdad.
+  retry: async (orderId, amount) => {
+    const { data } = await request('/api/payments', {
+      method: 'POST',
+      headers: { 'Idempotency-Key': uuid() },
+      body: { amount, currency: 'CLP', orderId }
+    });
+    return data;
   }
 };
 
