@@ -90,7 +90,7 @@ export default function CheckoutPage() {
 
   const addressComplete = address.street && address.city && address.region && address.zipCode;
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setCheckoutError(null);
@@ -99,9 +99,19 @@ export default function CheckoutPage() {
         paymentMethod,
         shippingAddress: address
       });
-      setConfirmedOrder(data);
       setIdempotencyKey(uuid());
       refresh();
+
+      // Si G6 devolvió un link de Mercado Pago, el usuario tiene que ir
+      // a pagar ahí de verdad — se redirige de inmediato. Si no hay
+      // initPoint (servicio caído / modo mock), se muestra la pantalla
+      // de confirmación normal como respaldo.
+      if (data.payment?.initPoint) {
+        window.location.href = data.payment.initPoint;
+        return;
+      }
+
+      setConfirmedOrder(data);
     } catch (err) {
       setCheckoutError(err);
     } finally {
