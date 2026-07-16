@@ -58,7 +58,11 @@ export default function ChatWidget() {
   const [view, setView] = useState('chat'); // 'chat' | 'settings'
   const [sessionId] = useState(() => uuid());
   const [messages, setMessages] = useState([
-    { from: 'bot', text: '¡Hola! Soy el asistente de FishMarket Cloud. Pregúntame por envíos, pagos o tu pedido.' }
+    {
+      from: 'bot',
+      text: '¡Hola! Soy el asistente de FishMarket Cloud. Pregúntame por envíos, pagos o tu pedido.',
+      isWelcome: true
+    }
   ]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -70,6 +74,22 @@ export default function ChatWidget() {
   // Estados para Health/Conexiones
   const [health, setHealth] = useState(null);
   const [loadingHealth, setLoadingHealth] = useState(false);
+
+  // Actualización dinámica del mensaje de bienvenida si cambia la sesión
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].isWelcome) {
+        return [{
+          from: 'bot',
+          text: user
+            ? `¡Hola, **${user.fullName || user.full_name || 'usuario'}**! 👋 Soy el asistente de FishMarket Cloud. ¿En qué puedo ayudarte hoy con tus pedidos o productos?`
+            : '¡Hola! Soy el asistente de FishMarket Cloud. Pregúntame por envíos, pagos o tu pedido.',
+          isWelcome: true
+        }];
+      }
+      return prev;
+    });
+  }, [user]);
 
   const fetchHealth = async () => {
     setLoadingHealth(true);
@@ -134,11 +154,21 @@ export default function ChatWidget() {
       const { data } = await chatApi.send(sessionId, text, user?.business_user_id);
       const metaText = `Intent: ${data.intent_detected || 'lógica interna'} · Fuentes: ${(data.sources_consulted || []).join(', ') || 'lógica interna'}`;
       setMessages((m) => [...m, { from: 'bot', text: data.response, meta: metaText }]);
-    } catch {
-      setMessages((m) => [
-        ...m,
-        { from: 'bot', text: 'No pude conectarme con el asistente en este momento. Intenta de nuevo en un momento.' }
-      ]);
+    } catch (err) {
+      if (err.status === 401 || err.code === 'UNAUTHORIZED') {
+        setMessages((m) => [
+          ...m,
+          { 
+            from: 'bot', 
+            text: '🔒 **Acceso Protegido**: Hola, eres un usuario invitado. Para poder ayudarte con información personal (como tus pedidos o notificaciones), por favor inicia sesión en la barra superior.'
+          }
+        ]);
+      } else {
+        setMessages((m) => [
+          ...m,
+          { from: 'bot', text: 'No pude conectarme con el asistente en este momento. Intenta de nuevo en un momento.' }
+        ]);
+      }
     } finally {
       setSending(false);
     }
