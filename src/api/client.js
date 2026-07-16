@@ -220,6 +220,17 @@ export const chatApi = {
 };
 
 // ---------------------------------------------------------------------
+// Pagos (Grupo 6, vía proxy del BFF en /api/payments)
+// ---------------------------------------------------------------------
+export const paymentsApi = {
+  getByOrder: async (orderId) => {
+    const { data } = await request(`/api/payments?orderId=${encodeURIComponent(orderId)}`);
+    const list = Array.isArray(data) ? data : data?.data || [];
+    return list[0] || null;
+  }
+};
+
+// ---------------------------------------------------------------------
 // Reportería (Grupo 10, vía proxy del BFF en /api/reports)
 // ---------------------------------------------------------------------
 const qs = (params = {}) => {
