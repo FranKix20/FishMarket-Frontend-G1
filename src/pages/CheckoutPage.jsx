@@ -6,7 +6,7 @@ import { checkoutApi, uuid } from '../api/client';
 import ErrorBanner from '../components/ErrorBanner';
 import StreetAutocomplete from '../components/StreetAutocomplete';
 import { CHILE_REGIONS, comunasForRegion } from '../data/chileRegions';
-import { formatCLP } from '../utils/format';
+import { formatCLP, paymentStatusLabel, paymentStatusPillClass } from '../utils/format';
 
 const PAYMENT_METHODS = [
   { value: 'credit_card', label: 'Tarjeta de crédito (simulada)' },
@@ -123,6 +123,14 @@ export default function CheckoutPage() {
           <p style={{ fontSize: 26, fontWeight: 800, color: 'var(--color-text)', marginTop: 20 }}>
             {formatCLP(confirmedOrder.totalAmount)}
           </p>
+          {confirmedOrder.payment && (
+            <p style={{ marginTop: 8, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Estado del pago:</span>
+              <span className={`pill ${paymentStatusPillClass(confirmedOrder.payment.status)}`}>
+                {paymentStatusLabel(confirmedOrder.payment.status)}
+              </span>
+            </p>
+          )}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24 }}>
             <button className="btn btn-secondary" onClick={() => navigate('/pedidos')}>
               Ver mis pedidos
