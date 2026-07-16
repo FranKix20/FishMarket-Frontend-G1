@@ -1,13 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ordersApi, paymentsApi } from '../api/client';
 import ErrorBanner from '../components/ErrorBanner';
 import Tideline from '../components/Tideline';
-import { formatCLP, formatDate, statusLabel, statusPillClass, paymentStatusLabel, paymentStatusPillClass } from '../utils/format';
+import {
+  formatCLP,
+  formatDate,
+  formatRelativeDate,
+  statusLabel,
+  statusPillClass,
+  paymentStatusLabel,
+  paymentStatusPillClass,
+  isTerminalOrderStatus
+} from '../utils/format';
 
-// Secuencia conocida de estados que expone Grupo 5. Si el pedido está
-// CANCELLED u OUT_OF_STOCK se muestra un estado especial en vez del
-// tracker, porque no encajan en una línea de tiempo lineal.
 const FLOW = ['CREATED', 'STOCK_RESERVED', 'PAID', 'SHIPPED', 'DELIVERED'];
 const FLOW_LABELS = {
   CREATED: 'Pedido creado',
@@ -16,6 +22,7 @@ const FLOW_LABELS = {
   SHIPPED: 'Enviado',
   DELIVERED: 'Entregado'
 };
+const REFRESH_MS = 15000;
 
 function OrderTracker({ status }) {
   const currentIdx = FLOW.indexOf(status);
@@ -42,32 +49,55 @@ export default function OrderDetailPage() {
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastChecked, setLastChecked] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const intervalRef = useRef(null);
 
-  const load = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data } = await ordersApi.get(orderId);
-      setOrder(data);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-    // El estado del pago (Grupo 6) se consulta aparte y no bloquea la
-    // carga del pedido: si G6 no responde, se muestra el pedido igual
-    // y simplemente no aparece la sección de pago.
-    try {
-      const found = await paymentsApi.getByOrder(orderId);
-      setPayment(found);
-    } catch {
-      setPayment(null);
-    }
-  };
+  const load = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
+      else setRefreshing(true);
+      setError(null);
+      try {
+        const { data } = await ordersApi.get(orderId);
+        setOrder(data);
+      } catch (err) {
+        if (!silent) setError(err);
+      } finally {
+        if (!silent) setLoading(false);
+      }
+      // El estado del pago (Grupo 6) se consulta aparte y no bloquea la
+      // carga del pedido: si G6 no responde, se muestra el pedido igual
+      // y simplemente no aparece la sección de pago.
+      try {
+        const found = await paymentsApi.getByOrder(orderId);
+        setPayment(found);
+      } catch {
+        setPayment(null);
+      }
+      setLastChecked(new Date().toISOString());
+      setRefreshing(false);
+    },
+    [orderId]
+  );
 
   useEffect(() => {
     load();
   }, [orderId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mientras el pedido no llegue a un estado terminal (o el pago siga
+  // pendiente), se reconsulta solo, sin spinner, para que el estado que
+  // se ve en pantalla sea siempre el real de G5/G6, no una foto vieja del
+  // momento en que se abrió la página.
+  useEffect(() => {
+    clearInterval(intervalRef.current);
+    const stillMoving = order && !isTerminalOrderStatus(order.status);
+    const paymentPending = payment?.status === 'PENDING';
+    if (stillMoving || paymentPending) {
+      intervalRef.current = setInterval(() => load({ silent: true }), REFRESH_MS);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [order, payment, load]);
 
   return (
     <div className="page container">
@@ -92,6 +122,16 @@ export default function OrderDetailPage() {
             </div>
             <span className={`pill ${statusPillClass(order.status)}`}>{statusLabel(order.status)}</span>
           </div>
+
+          {!isTerminalOrderStatus(order.status) && (
+            <div className="order-detail__live-note">
+              <span className={`live-dot ${refreshing ? 'is-pulsing' : ''}`} aria-hidden="true" />
+              {refreshing ? 'Actualizando estado…' : `Verificado ${formatRelativeDate(lastChecked)}`}
+              <button type="button" className="link-btn" onClick={() => load({ silent: true })} disabled={refreshing}>
+                Actualizar ahora
+              </button>
+            </div>
+          )}
 
           {['CANCELLED', 'OUT_OF_STOCK'].includes(order.status) ? (
             <div className="banner banner-warning" style={{ marginTop: 20 }}>

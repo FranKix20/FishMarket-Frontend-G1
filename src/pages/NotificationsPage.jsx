@@ -100,8 +100,12 @@ export default function NotificationsPage() {
           </div>
 
           <div className="notif-list">
-            {notifications.map((n) => (
-              <div className={`card notif-row ${!n.read ? 'is-unread' : ''}`} key={n.id}>
+            {notifications.map((n, i) => (
+              <div
+                className={`card notif-row ${!n.read ? 'is-unread' : ''}`}
+                key={n.id}
+                style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
+              >
                 <div className="notif-row__icon">{TYPE_ICON[n.type] || '🔔'}</div>
                 <div className="notif-row__body">
                   <p>{n.title}</p>
