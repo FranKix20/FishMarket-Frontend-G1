@@ -14,9 +14,6 @@ const PAYMENT_METHODS = [
   { value: 'bank_transfer', label: 'Transferencia bancaria (simulada)' }
 ];
 
-const SHIPPING_COST = 3000;
-const FREE_SHIPPING_THRESHOLD = 50000;
-
 function Stepper({ step }) {
   const steps = ['Carrito', 'Entrega y pago', 'Confirmación'];
   return (
@@ -45,8 +42,7 @@ export default function CheckoutPage() {
 
   const items = cart?.items || [];
   const subtotal = cart?.totalAmount ?? items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST;
-  const total = subtotal + shipping;
+  const total = subtotal;
 
   const [paymentMethod, setPaymentMethod] = useState('credit_card');
   const [address, setAddress] = useState({ street: '', city: '', region: '', country: 'CL', zipCode: '' });
