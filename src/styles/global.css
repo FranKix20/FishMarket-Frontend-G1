@@ -246,11 +246,15 @@ button {
   color: var(--color-text-faint);
   line-height: 1.4;
   margin: 0;
+  overflow-wrap: break-word;
 }
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
+}
+.field-row > .field {
+  min-width: 0;
 }
 @media (max-width: 640px) {
   .field-row {
