@@ -276,10 +276,6 @@ const handleSubmit = async (e) => {
             <span>Subtotal</span>
             <span>{formatCLP(subtotal)}</span>
           </div>
-          <div className="cart-summary__row">
-            <span>Envío</span>
-            <span>{shipping === 0 ? 'Gratis' : formatCLP(shipping)}</span>
-          </div>
           <div className="cart-summary__row total">
             <span>Total</span>
             <span>{formatCLP(total)}</span>
