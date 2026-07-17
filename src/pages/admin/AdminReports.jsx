@@ -203,6 +203,14 @@ export default function AdminReports() {
             )}
           </p>
         </div>
+        <a
+          href="https://fishmarket-45lw.onrender.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-secondary btn-sm"
+        >
+          Abrir Reportería de G10 ↗
+        </a>
       </div>
 
       <div className="admin-toolbar">
