@@ -53,18 +53,14 @@ export default function AdminProductModal({ product, categories, onClose, onSave
       if (isEdit) {
         await catalogApi.updateProduct(product.id, { ...payload, isActive });
       } else {
-        const created = await catalogApi.createProduct({ ...payload, stockVisible: Number(stockVisible) });
-        const initialStock = Number(stockVisible);
-        if (created?.id && Number.isFinite(initialStock) && initialStock > 0) {
-          // Antes esto quedaba en 0 en Grupo 7 hasta su próxima
-          // sincronización de catálogo; con su API real disponible, se
-          // siembra el stock inicial directo para que quede utilizable
-          // de inmediato, sin depender de un proceso externo con timing
-          // desconocido.
-          await stockApi.setStock(created.id, initialStock, 'SET').catch((err) => {
-            console.warn('No se pudo sembrar el stock inicial en Grupo 7:', err.message);
-          });
-        }
+        await catalogApi.createProduct({ ...payload, stockVisible: Number(stockVisible) });
+        // OJO: POST /inventory/:productId/stock (setStock) de G7 exige que
+        // la fila de inventario YA exista (si no, responde 404) — no crea
+        // filas nuevas. La única forma real de crear la fila del producto
+        // recién nacido es a través de su sincronización de catálogo.
+        await stockApi.syncCatalog().catch((err) => {
+          console.warn('No se pudo sincronizar el stock inicial en Grupo 7:', err.message);
+        });
       }
       onSaved();
     } catch (err) {
