@@ -26,6 +26,8 @@ export default function AdminProducts() {
   const [modal, setModal] = useState(null);
   const [stockById, setStockById] = useState({});
   const [stockModal, setStockModal] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -69,6 +71,21 @@ export default function AdminProducts() {
 
   const categoryName = (id) => categories.find((c) => c.id === id)?.name || '—';
 
+  const handleSyncCatalog = async () => {
+    setSyncing(true);
+    setError(null);
+    setSyncResult(null);
+    try {
+      const { data } = await stockApi.syncCatalog();
+      setSyncResult(data);
+      await load();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const counts = useMemo(() => {
     const c = {};
     for (const def of CHIPS) c[def.key] = products.filter(def.match).length;
@@ -104,6 +121,23 @@ export default function AdminProducts() {
           + Nuevo producto
         </button>
       </div>
+
+      <div className="admin-toolbar" style={{ justifyContent: 'flex-end', marginBottom: 0 }}>
+        <button className="btn btn-secondary btn-sm" disabled={syncing} onClick={handleSyncCatalog}>
+          {syncing ? 'Sincronizando…' : '🔄 Sincronizar stock con Grupo 7'}
+        </button>
+      </div>
+
+      {syncResult && (
+        <div className="banner banner-success" role="status">
+          <p>
+            Catálogo sincronizado: {syncResult.created} producto{syncResult.created === 1 ? '' : 's'} nuevo
+            {syncResult.created === 1 ? '' : 's'} registrado{syncResult.created === 1 ? '' : 's'} en Grupo 7,{' '}
+            {syncResult.alreadyTracked} ya estaba{syncResult.alreadyTracked === 1 ? '' : 'n'} al día
+            {syncResult.skippedInactive > 0 ? `, ${syncResult.skippedInactive} inactivo(s) omitido(s)` : ''}.
+          </p>
+        </div>
+      )}
 
       <div className="admin-toolbar">
         <div className="admin-chips">
