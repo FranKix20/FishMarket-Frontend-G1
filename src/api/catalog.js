@@ -66,8 +66,15 @@ export const catalogApi = {
 
   getProduct: (id) => g3Request(`/products/${id}`),
 
-  createProduct: ({ name, description, price, categoryId, imageUrl }) =>
-    g3Request('/products', {
+  // G3 SIEMPRE crea el producto con stock_visible: 0, sin importar qué se
+  // le mande en el body — su POST /products lo hardcodea así (lo confirmé
+  // en su código fuente). Su propio PUT /products/:id sí acepta y persiste
+  // stockVisible directamente, así que si se pide un stock inicial > 0,
+  // se hace un segundo llamado inmediatamente después de crear para
+  // dejarlo con el valor real, en vez de que quede en 0 hasta la próxima
+  // sincronización de Grupo 7 (Inventario).
+  createProduct: async ({ name, description, price, categoryId, imageUrl, stockVisible }) => {
+    const created = await g3Request('/products', {
       method: 'POST',
       isMutation: true,
       body: {
@@ -77,13 +84,24 @@ export const catalogApi = {
         categoryId,
         imageUrl
       }
-    }),
+    });
 
-  updateProduct: (id, { name, description, price, categoryId, imageUrl, isActive }) =>
+    const initialStock = Number(stockVisible);
+    if (Number.isFinite(initialStock) && initialStock > 0) {
+      return g3Request(`/products/${created.id}`, {
+        method: 'PUT',
+        isMutation: true,
+        body: { stockVisible: initialStock }
+      });
+    }
+    return created;
+  },
+
+  updateProduct: (id, { name, description, price, categoryId, imageUrl, isActive, stockVisible }) =>
     g3Request(`/products/${id}`, {
       method: 'PUT',
       isMutation: true,
-      body: { name, description, price, categoryId, imageUrl, isActive }
+      body: { name, description, price, categoryId, imageUrl, isActive, stockVisible }
     }),
 
   setActive: (product, isActive) =>
