@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { catalogApi } from '../api/catalog';
+import { stockApi } from '../api/client';
 import ErrorBanner from './ErrorBanner';
 
 export default function AdminProductModal({ product, categories, onClose, onSaved, onCategoryCreated }) {
@@ -52,7 +53,18 @@ export default function AdminProductModal({ product, categories, onClose, onSave
       if (isEdit) {
         await catalogApi.updateProduct(product.id, { ...payload, isActive });
       } else {
-        await catalogApi.createProduct({ ...payload, stockVisible: Number(stockVisible) });
+        const created = await catalogApi.createProduct({ ...payload, stockVisible: Number(stockVisible) });
+        const initialStock = Number(stockVisible);
+        if (created?.id && Number.isFinite(initialStock) && initialStock > 0) {
+          // Antes esto quedaba en 0 en Grupo 7 hasta su próxima
+          // sincronización de catálogo; con su API real disponible, se
+          // siembra el stock inicial directo para que quede utilizable
+          // de inmediato, sin depender de un proceso externo con timing
+          // desconocido.
+          await stockApi.setStock(created.id, initialStock, 'SET').catch((err) => {
+            console.warn('No se pudo sembrar el stock inicial en Grupo 7:', err.message);
+          });
+        }
       }
       onSaved();
     } catch (err) {
@@ -118,7 +130,7 @@ export default function AdminProductModal({ product, categories, onClose, onSave
             />
             <p className="admin-field-hint">
               {isEdit
-                ? 'El stock lo administra Grupo 7 (Inventario) una vez creado el producto — no se edita desde aquí.'
+                ? 'El stock lo administra Grupo 7 (Inventario). Usa el botón "Reponer stock" en la lista para ajustarlo.'
                 : 'Solo se puede definir aquí, al crear. Una vez creado, el stock pasa a ser gestionado por Grupo 7 (Inventario).'}
             </p>
           </div>
