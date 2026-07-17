@@ -10,6 +10,7 @@ export default function AdminProductModal({ product, categories, onClose, onSave
   const [categoryId, setCategoryId] = useState(product?.categoryId || '');
   const [imageUrl, setImageUrl] = useState(product?.imageUrl || '');
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
+  const [stockVisible, setStockVisible] = useState(product?.stockVisible ?? 0);
 
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -51,7 +52,7 @@ export default function AdminProductModal({ product, categories, onClose, onSave
       if (isEdit) {
         await catalogApi.updateProduct(product.id, { ...payload, isActive });
       } else {
-        await catalogApi.createProduct(payload);
+        await catalogApi.createProduct({ ...payload, stockVisible: Number(stockVisible) });
       }
       onSaved();
     } catch (err) {
@@ -104,14 +105,22 @@ export default function AdminProductModal({ product, categories, onClose, onSave
             />
           </div>
           <div className="field">
-            <label htmlFor="ap-stock">Stock visible</label>
+            <label htmlFor="ap-stock">{isEdit ? 'Stock actual' : 'Stock inicial'}</label>
             <input
               id="ap-stock"
-              type="text"
-              value={isEdit ? product.stockVisible ?? 0 : 'Se define al crear'}
-              disabled
-              title="El stock lo gestiona Grupo 7"
+              type="number"
+              min="0"
+              step="1"
+              value={stockVisible}
+              onChange={(e) => setStockVisible(e.target.value)}
+              disabled={isEdit}
+              required={!isEdit}
             />
+            <p className="admin-field-hint">
+              {isEdit
+                ? 'El stock lo administra Grupo 7 (Inventario) una vez creado el producto — no se edita desde aquí.'
+                : 'Solo se puede definir aquí, al crear. Una vez creado, el stock pasa a ser gestionado por Grupo 7 (Inventario).'}
+            </p>
           </div>
         </div>
 
