@@ -48,6 +48,7 @@
 }
 .navbar__search input {
   flex: 1;
+  height: 44px;
   border: none;
   border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   padding: 0 var(--space-4);
@@ -63,6 +64,7 @@
   border: none;
   background: var(--color-link);
   color: #fff;
+  height: 44px;
   padding: 0 18px;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   display: flex;
@@ -151,7 +153,11 @@
 .navbar__account-menu a:hover,
 .navbar__account-menu button:hover {
   background: var(--color-surface-hover);
+  color: var(--color-text);
   text-decoration: none;
+}
+.navbar__account-menu button.is-danger:hover {
+  color: var(--color-danger);
 }
 .navbar__account-menu button.is-danger {
   color: var(--color-danger);
@@ -512,6 +518,13 @@
   filter: grayscale(0.75) opacity(0.65);
 }
 .product-card--out-of-stock:hover .product-card__image img {
+  transform: none;
+}
+/* El botón "Agregar al carrito" no debe subir al hacer hover: si el
+   usuario mueve el cursor hacia él desde abajo, el botón "huye" hacia
+   arriba y termina fallando el click. Se conserva el cambio de color
+   y la sombra, solo se anula el translateY. */
+.product-card__actions .btn-primary:hover:not(:disabled) {
   transform: none;
 }
 .product-card__image {
