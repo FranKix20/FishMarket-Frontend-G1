@@ -96,6 +96,17 @@ function RevenueTrendChart({ data }) {
   );
 }
 
+// Formatea una Date a YYYY-MM-DD (lo que espera G10 en startDate/endDate).
+function isoDate(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+const RANGE_PRESETS = [
+  { label: '7 días', days: 7 },
+  { label: '30 días', days: 30 },
+  { label: '90 días', days: 90 }
+];
+
 export default function AdminReports() {
   const [sales, setSales] = useState(null);
   const [products, setProducts] = useState(null);
@@ -108,6 +119,26 @@ export default function AdminReports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // G10 espera startDate/endDate explícitos: si no se los mandamos, cae
+  // en su rango de datos de muestra fijo (enero 2025), que no tiene nada
+  // que ver con el catálogo ni la actividad real de esta tienda. Por
+  // defecto se piden los últimos 30 días (mismo default que usa el
+  // propio dashboard de G10).
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return isoDate(d);
+  });
+  const [endDate, setEndDate] = useState(() => isoDate(new Date()));
+
+  const applyPreset = (days) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    setStartDate(isoDate(start));
+    setEndDate(isoDate(end));
+  };
+
   // Promise.allSettled en vez de Promise.all: si UN endpoint de G10 falla
   // (ej. inventario caído momentáneamente) el resto del dashboard igual
   // se pinta con lo que sí llegó, en vez de dejar toda la pantalla en
@@ -115,15 +146,16 @@ export default function AdminReports() {
   const load = async () => {
     setLoading(true);
     setError(null);
+    const range = { startDate, endDate };
     const [salesRes, productsRes, statusRes, fulfillmentRes, paymentsRes, trendsRes, commsRes, lowStockRes] =
       await Promise.allSettled([
-        reportsApi.salesSummary({ groupBy: 'day' }),
-        reportsApi.products({ limit: 5 }),
-        reportsApi.status(),
-        reportsApi.fulfillment(),
-        reportsApi.paymentSummary(),
-        reportsApi.orderTrends({ interval: 'day' }),
-        reportsApi.communications(),
+        reportsApi.salesSummary({ ...range, groupBy: 'day' }),
+        reportsApi.products({ ...range, limit: 5 }),
+        reportsApi.status(range),
+        reportsApi.fulfillment(range),
+        reportsApi.paymentSummary(range),
+        reportsApi.orderTrends({ ...range, interval: 'day' }),
+        reportsApi.communications(range),
         inventoryApi.lowStock({ threshold: 10 })
       ]);
 
@@ -148,7 +180,8 @@ export default function AdminReports() {
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startDate, endDate]);
 
   // G10 marca cada respuesta con source: "db" | "mock". Si CUALQUIERA de
   // los reportes viene en modo mock —por ejemplo porque su DATABASE_URL
@@ -169,6 +202,37 @@ export default function AdminReports() {
               <> Período: {sales.period.startDate} → {sales.period.endDate}.</>
             )}
           </p>
+        </div>
+      </div>
+
+      <div className="admin-toolbar">
+        <div className="admin-chips">
+          {RANGE_PRESETS.map((p) => (
+            <button key={p.days} className="admin-chip" onClick={() => applyPreset(p.days)}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="date"
+            className="admin-select-sm"
+            value={startDate}
+            max={endDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <span className="admin-muted">→</span>
+          <input
+            type="date"
+            className="admin-select-sm"
+            value={endDate}
+            min={startDate}
+            max={isoDate(new Date())}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+          <button className="btn btn-secondary btn-sm" onClick={load} disabled={loading}>
+            {loading ? 'Actualizando…' : 'Refrescar'}
+          </button>
         </div>
       </div>
 
