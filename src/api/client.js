@@ -270,3 +270,20 @@ export const reportsApi = {
 export const inventoryApi = {
   lowStock: (params) => request(`/api/inventory/low-stock${qs(params)}`)
 };
+
+// ---------------------------------------------------------------------
+// Stock real (Grupo 7, vía proxy del BFF en /api/stock)
+// No confundir con inventoryApi de arriba: ese es el reporte de "bajo
+// stock" de Grupo 10 (Reportería); esto es el servicio real que crea,
+// consulta y ajusta el stock por producto (Grupo 7 - Inventario).
+// ---------------------------------------------------------------------
+export const stockApi = {
+  list: (page = 1, size = 100) => request(`/api/stock?page=${page}&size=${size}`),
+  getByProduct: (productId) => request(`/api/stock/${encodeURIComponent(productId)}`),
+  setStock: (productId, quantity, operation = 'SET') =>
+    request(`/api/stock/${encodeURIComponent(productId)}`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': uuid() },
+      body: { quantity, operation }
+    })
+};

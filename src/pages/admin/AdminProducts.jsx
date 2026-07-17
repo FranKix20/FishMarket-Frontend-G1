@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { catalogApi } from '../../api/catalog';
+import { stockApi } from '../../api/client';
 import ErrorBanner from '../../components/ErrorBanner';
 import Tideline from '../../components/Tideline';
 import AdminProductModal from '../../components/AdminProductModal';
+import AdminStockModal from '../../components/AdminStockModal';
 import { formatCLP } from '../../utils/format';
 
 const PAGE_SIZE = 8;
@@ -22,17 +24,28 @@ export default function AdminProducts() {
   const [chip, setChip] = useState('todos');
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState(null);
+  const [stockById, setStockById] = useState({});
+  const [stockModal, setStockModal] = useState(null);
 
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
+      const [productsRes, categoriesRes, stockRes] = await Promise.all([
         catalogApi.listProducts({ page: 1, size: 100, includeInactive: true }),
-        catalogApi.listCategories()
+        catalogApi.listCategories(),
+        // Stock real (Grupo 7) — puede no traer fila para productos recién
+        // creados que aún no se sincronizaron de su lado; se maneja como
+        // "sin registrar" más abajo en vez de asumir 0 falso.
+        stockApi.list(1, 200).catch(() => ({ data: { data: [] } }))
       ]);
       setProducts(productsRes?.data || []);
       setCategories(categoriesRes?.data || []);
+      const map = {};
+      for (const row of stockRes?.data?.data || []) {
+        map[row.productId] = row;
+      }
+      setStockById(map);
     } catch (err) {
       setError(err);
     } finally {
@@ -154,7 +167,24 @@ export default function AdminProducts() {
                   </td>
                   <td>{categoryName(p.categoryId)}</td>
                   <td>{formatCLP(p.price)}</td>
-                  <td>{p.stockVisible ?? 0}</td>
+                  <td>
+                    {(() => {
+                      const stock = stockById[p.id];
+                      if (!stock || stock.availableStock === null || stock.availableStock === undefined) {
+                        return <span className="admin-muted">Sin registrar</span>;
+                      }
+                      const low = stock.availableStock > 0 && stock.availableStock <= 5;
+                      const out = stock.availableStock <= 0;
+                      return (
+                        <span className={out ? 'pill pill-danger' : low ? 'pill pill-warning' : undefined}>
+                          {stock.availableStock}
+                          {stock.reservedStock > 0 && (
+                            <span className="admin-muted"> ({stock.reservedStock} reservado{stock.reservedStock === 1 ? '' : 's'})</span>
+                          )}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td>
                     <span className={`admin-badge status-${p.isActive ? 'active' : 'disabled'}`}>
                       {p.isActive ? 'Activo' : 'Inactivo'}
@@ -164,6 +194,9 @@ export default function AdminProducts() {
                     <div className="admin-actions">
                       <button className="btn btn-secondary btn-sm" onClick={() => setModal({ mode: 'edit', product: p })}>
                         Editar
+                      </button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setStockModal(p)}>
+                        Reponer stock
                       </button>
                       {p.isActive ? (
                         <button
@@ -210,6 +243,18 @@ export default function AdminProducts() {
           onCategoryCreated={(cat) => setCategories((prev) => [...prev, cat])}
           onSaved={() => {
             setModal(null);
+            load();
+          }}
+        />
+      )}
+
+      {stockModal && (
+        <AdminStockModal
+          product={stockModal}
+          currentStock={stockById[stockModal.id]}
+          onClose={() => setStockModal(null)}
+          onSaved={() => {
+            setStockModal(null);
             load();
           }}
         />
