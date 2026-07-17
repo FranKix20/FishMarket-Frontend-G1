@@ -8,8 +8,6 @@ import ProductCard from '../components/ProductCard';
 import { productsApi } from '../api/client';
 import { formatCLP } from '../utils/format';
 
-const FREE_SHIPPING_THRESHOLD = 50000;
-const SHIPPING_COST = 3000;
 const REMOVE_ANIM_MS = 260;
 
 export default function CartPage() {
@@ -24,10 +22,7 @@ export default function CartPage() {
 
   const items = cart?.items || [];
   const subtotal = cart?.totalAmount ?? items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
-  const shipping = items.length === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const total = subtotal + shipping;
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const progressPct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const total = subtotal;
 
   // Se muestra la tarjeta "colapsándose" (fade + altura a 0) durante
   // REMOVE_ANIM_MS antes de sacarla de verdad del carrito, para que la
@@ -189,26 +184,10 @@ export default function CartPage() {
               <span>Subtotal ({items.length} producto{items.length === 1 ? '' : 's'})</span>
               <span>{formatCLP(subtotal)}</span>
             </div>
-            <div className="cart-summary__row">
-              <span>Envío</span>
-              <span>{shipping === 0 ? 'Gratis' : formatCLP(shipping)}</span>
-            </div>
             <div className="cart-summary__row total">
               <span>Total</span>
               <span>{formatCLP(total)}</span>
             </div>
-
-            {remainingForFreeShipping > 0 ? (
-              <div className="cart-summary__shipping-note">
-                ¡Envío gratis por compras sobre {formatCLP(FREE_SHIPPING_THRESHOLD)}! Te faltan{' '}
-                {formatCLP(remainingForFreeShipping)}.
-                <div className="progress-track">
-                  <div className="progress-track__fill" style={{ width: `${progressPct}%` }} />
-                </div>
-              </div>
-            ) : (
-              <div className="cart-summary__shipping-note">Tu pedido ya califica para envío gratis. 🎉</div>
-            )}
 
             <button
               type="button"
