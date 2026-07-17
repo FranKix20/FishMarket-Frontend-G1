@@ -44,6 +44,8 @@ export default function AdminShipments() {
   const [error, setError] = useState(null);
   const [chip, setChip] = useState('todos');
   const [search, setSearch] = useState('');
+  const [driverFilter, setDriverFilter] = useState('todos');
+  const [sortOrder, setSortOrder] = useState('recientes'); // 'recientes' | 'antiguos'
   const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState(null);
   const [assigning, setAssigning] = useState(null); // shipmentId en selección de repartidor
@@ -132,8 +134,10 @@ export default function AdminShipments() {
   const filtered = useMemo(() => {
     const def = CHIPS.find((x) => x.key === chip) || CHIPS[0];
     const q = search.trim().toLowerCase();
-    return shipments.filter((s) => {
+    const rows = shipments.filter((s) => {
       if (!def.match(s)) return false;
+      if (driverFilter === 'sin_asignar' && s.driverName) return false;
+      if (driverFilter !== 'todos' && driverFilter !== 'sin_asignar' && s.driverName !== driverFilter) return false;
       if (!q) return true;
       return (
         s.orderId?.toLowerCase().includes(q) ||
@@ -141,11 +145,32 @@ export default function AdminShipments() {
         s.shipTo?.fullName?.toLowerCase().includes(q)
       );
     });
-  }, [shipments, chip, search]);
+
+    // G8 no garantiza ningún orden particular en /v1/shipments (por eso
+    // las fechas se veían salteadas) — se ordena siempre acá, por
+    // fecha de última actualización. Los envíos sin fecha válida van al
+    // final en vez de romper el orden del resto.
+    const sorted = [...rows].sort((a, b) => {
+      const ta = new Date(a.updatedAt).getTime();
+      const tb = new Date(b.updatedAt).getTime();
+      const va = Number.isNaN(ta) ? -Infinity : ta;
+      const vb = Number.isNaN(tb) ? -Infinity : tb;
+      return sortOrder === 'recientes' ? vb - va : va - vb;
+    });
+
+    return sorted;
+  }, [shipments, chip, search, driverFilter, sortOrder]);
+
+  // Lista de repartidores que efectivamente tienen envíos asignados,
+  // para no mostrar en el filtro nombres sin ningún envío.
+  const driverOptions = useMemo(() => {
+    const names = new Set(shipments.map((s) => s.driverName).filter(Boolean));
+    return [...names].sort((a, b) => a.localeCompare(b));
+  }, [shipments]);
 
   useEffect(() => {
     setPage(1);
-  }, [chip, search]);
+  }, [chip, search, driverFilter, sortOrder]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -174,12 +199,37 @@ export default function AdminShipments() {
             </button>
           ))}
         </div>
-        <input
-          className="admin-search"
-          placeholder="Buscar por pedido, envío o destinatario…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="admin-toolbar__filters">
+          <select
+            className="admin-select-sm"
+            value={driverFilter}
+            onChange={(e) => setDriverFilter(e.target.value)}
+            title="Filtrar por repartidor"
+          >
+            <option value="todos">Todos los repartidores</option>
+            <option value="sin_asignar">Sin asignar</option>
+            {driverOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="admin-select-sm"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            title="Ordenar por fecha"
+          >
+            <option value="recientes">Más recientes primero</option>
+            <option value="antiguos">Más antiguos primero</option>
+          </select>
+          <input
+            className="admin-search"
+            placeholder="Buscar por pedido, envío o destinatario…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
 
       {error && <ErrorBanner error={error} onRetry={load} />}
