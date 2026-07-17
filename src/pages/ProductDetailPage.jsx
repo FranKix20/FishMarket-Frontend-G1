@@ -7,6 +7,7 @@ import ErrorBanner from '../components/ErrorBanner';
 import Tideline from '../components/Tideline';
 import ProductCard from '../components/ProductCard';
 import { formatCLP } from '../utils/format';
+import { inferCategoryLabel } from '../utils/categoryLabel';
 
 function stockBadge(stockVisible) {
   if (stockVisible === 0) return { label: 'Sin stock', cls: 'pill-danger' };
@@ -55,9 +56,10 @@ export default function ProductDetailPage() {
     let cancelled = false;
     async function loadRelated() {
       if (!product) return;
+      const categoryLabel = product.categoryName || inferCategoryLabel(product);
       try {
-        const { data } = product.categoryName
-          ? await productsApi.search(product.categoryName, 1, 8)
+        const { data } = categoryLabel
+          ? await productsApi.search(categoryLabel, 1, 8)
           : await productsApi.list(1, 8);
         if (!cancelled) {
           setRelated((data.data || []).filter((p) => p.id !== product.id).slice(0, 4));
@@ -118,15 +120,16 @@ export default function ProductDetailPage() {
 
   const badge = stockBadge(product.stockVisible);
   const outOfStock = product.stockVisible === 0;
+  const categoryLabel = product.categoryName || inferCategoryLabel(product);
 
   return (
     <div className="page container">
       <div className="breadcrumb">
         <Link to="/">Inicio</Link>
         <span>›</span>
-        {product.categoryName && (
+        {categoryLabel && (
           <>
-            <span>{product.categoryName}</span>
+            <span>{categoryLabel}</span>
             <span>›</span>
           </>
         )}
@@ -145,7 +148,7 @@ export default function ProductDetailPage() {
         </div>
 
         <div>
-          {product.categoryName && <p className="product-detail__category">{product.categoryName}</p>}
+          {categoryLabel && <p className="product-detail__category">{categoryLabel}</p>}
           <span className={`pill ${badge.cls}`}>{badge.label}</span>
           <h1 className="product-detail__title" style={{ marginTop: 12 }}>
             {product.name}
@@ -191,10 +194,12 @@ export default function ProductDetailPage() {
 
           <table className="specs-table">
             <tbody>
-              <tr>
-                <th>Categoría</th>
-                <td>{product.categoryName || 'Sin categoría'}</td>
-              </tr>
+              {categoryLabel && (
+                <tr>
+                  <th>Categoría</th>
+                  <td>{categoryLabel}</td>
+                </tr>
+              )}
               <tr>
                 <th>Disponibilidad</th>
                 <td>{outOfStock ? 'Sin stock' : `${product.stockVisible} unidades disponibles`}</td>
