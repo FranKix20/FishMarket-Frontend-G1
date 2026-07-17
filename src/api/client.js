@@ -285,5 +285,10 @@ export const stockApi = {
       method: 'POST',
       headers: { 'Idempotency-Key': uuid() },
       body: { quantity, operation }
-    })
+    }),
+  // Backfill: crea en Grupo 7 la fila de inventario de cada producto del
+  // catálogo que aún no la tenga (ej. productos creados antes de esta
+  // integración). Idempotente de su lado, se puede llamar las veces que
+  // haga falta sin duplicar ni pisar stock ya gestionado.
+  syncCatalog: () => request('/api/stock/sync-catalog', { method: 'POST' })
 };
