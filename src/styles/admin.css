@@ -80,6 +80,12 @@
   outline: none;
   border-color: var(--color-link);
 }
+.admin-toolbar__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
 
 /* Tabla */
 .admin-table-wrap {
