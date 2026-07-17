@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import { reportsApi, inventoryApi } from '../../api/client';
 import ErrorBanner from '../../components/ErrorBanner';
 import Tideline from '../../components/Tideline';
