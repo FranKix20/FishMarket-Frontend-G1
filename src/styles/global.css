@@ -10,6 +10,37 @@ body,
   height: 100%;
 }
 
+/* Salvaguarda: si CUALQUIER elemento (tabla ancha, texto largo sin
+   cortes, etc.) se pasa del ancho disponible, que quede con scroll
+   interno en vez de romper el layout general empujando un scroll
+   horizontal de toda la página. Solo en <html> (no en <body>) para no
+   arriesgar el position:sticky del navbar / filtros / resumen del carrito. */
+html {
+  overflow-x: hidden;
+}
+body {
+  max-width: 100vw;
+}
+
+/* CSS Grid no deja que sus hijos se encojan más allá del tamaño de su
+   contenido por defecto (min-width: auto implícito). Si uno de esos
+   hijos tiene algo con ancho mínimo propio adentro (ej. una tabla con
+   min-width, un bloque de código, un ID largo sin cortes), la grilla
+   completa se niega a encogerse y empuja overflow horizontal de TODA
+   la página en vez de solo desbordar (con scroll) dentro de sí mismo.
+   Esto libera ese freno en todas las grillas de layout del sitio. */
+.catalog-layout > *,
+.account-layout > *,
+.account-main > *,
+.account-data-grid > *,
+.cart-layout > *,
+.checkout-layout > *,
+.detail-columns > *,
+.product-detail > *,
+.admin-report-grid > * {
+  min-width: 0;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);
