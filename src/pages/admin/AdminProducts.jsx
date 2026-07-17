@@ -39,7 +39,15 @@ export default function AdminProducts() {
         // Stock real (Grupo 7) — puede no traer fila para productos recién
         // creados que aún no se sincronizaron de su lado; se maneja como
         // "sin registrar" más abajo en vez de asumir 0 falso.
-        stockApi.list(1, 200).catch(() => ({ data: { data: [] } }))
+        // G7 rechaza con 400 "Invalid pagination parameters" cualquier
+        // size mayor a 100 — se confirmó pidiendo 200 directamente contra
+        // prod. El catálogo hoy tiene bastante menos de 100 productos, así
+        // que basta con bajar el tamaño de página; si en el futuro se
+        // supera ese límite, esto necesita paginar en varias pasadas.
+        stockApi.list(1, 100).catch((err) => {
+          console.error('No se pudo cargar el stock de Grupo 7:', err);
+          return { data: { data: [] } };
+        })
       ]);
       setProducts(productsRes?.data || []);
       setCategories(categoriesRes?.data || []);
