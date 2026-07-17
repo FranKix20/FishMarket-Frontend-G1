@@ -1,5 +1,4 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://bff-mock-g1.vercel.app';
-
 const TOKEN_KEY = 'marea.access_token';
 const REFRESH_KEY = 'marea.refresh_token';
 const USER_KEY = 'marea.user';
