@@ -241,6 +241,12 @@ button {
 .field input::placeholder {
   color: var(--color-text-faint);
 }
+.admin-field-hint {
+  font-size: 11.5px;
+  color: var(--color-text-faint);
+  line-height: 1.4;
+  margin: 0;
+}
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
